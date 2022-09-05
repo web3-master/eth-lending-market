@@ -1,0 +1,29 @@
+{
+  "name": "eth-lending-market",
+  "version": "1.0.0",
+  "description": "Decentralized lending and borrowing market built on ethereum.",
+  "scripts": {
+    "chain": "npm run chain --workspace contract",
+    "deploy-local": "npm run deploy-local --workspace contract",
+    "deploy-ropsten": "npm run deploy-ropsten --workspace contract",
+    "start": "npm run start --workspace dapp",
+    "build": "npm run build --workspace dapp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dany-armstrong/eth-lending-market.git"
+  },
+  "keywords": [
+    "defi",
+    "lending"
+  ],
+  "author": "daniel armstrong",
+  "license": "BSL-1.0",
+  "bugs": {
+    "url": "https://github.com/dany-armstrong/eth-lending-market/issues"
+  },
+  "homepage": "https://github.com/dany-armstrong/eth-lending-market#readme",
+  "workspaces": [
+    "./packages/*"
+  ]
+}
