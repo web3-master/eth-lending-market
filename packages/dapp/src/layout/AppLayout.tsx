@@ -3,7 +3,7 @@ import {Col, Layout, Row} from "antd";
 import { Content, Footer, Header } from "antd/lib/layout/layout";
 import logo from "../images/logo.png";
 import AppMenu from "./AppMenu";
-import Account from "./Account";
+import Account from "../components/Account";
 
 const AppLayout = ({children}: { children: ReactNode }) => {
     return (
