@@ -7,6 +7,8 @@ import {
   deployCompoundV2,
   Comptroller,
 } from "@dany-armstrong/hardhat-compound";
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 
 async function main() {
   const [deployer] = await ethers.getSigners();
@@ -68,6 +70,12 @@ async function main() {
   console.log("SimplePriceOralce: ", await comptroller.oracle());
   console.log("cUNI: ", cUNI.address);
   console.log("cUSDC: ", cUSDC.address);
+
+  const chainId = await deployer.getChainId();
+  const outputFileName = join(__dirname, `../../dapp/src/contract/${chainId}-comptroller.txt`);
+  writeFileSync(outputFileName, comptroller.address, {
+    flag: 'w',
+  });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
