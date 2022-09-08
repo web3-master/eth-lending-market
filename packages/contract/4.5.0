@@ -1,0 +1,67 @@
+
+> bufferutil@4.0.6 install H:\GitHub\eth-lending-market\packages\contract\node_modules\bufferutil
+> node-gyp-build
+
+
+> utf-8-validate@5.0.9 install H:\GitHub\eth-lending-market\packages\contract\node_modules\utf-8-validate
+> node-gyp-build
+
+
+> core-js-pure@3.25.1 postinstall H:\GitHub\eth-lending-market\packages\contract\node_modules\core-js-pure
+> node -e "try{require('./postinstall')}catch(e){}"
+
+[96mThank you for using core-js ([94m https://github.com/zloirock/core-js [96m) for polyfilling JavaScript standard library![0m
+
+[96mThe project needs your help! Please consider supporting of core-js:[0m
+[96m>[94m https://opencollective.com/core-js [0m
+[96m>[94m https://patreon.com/zloirock [0m
+[96m>[94m bitcoin: bc1qlea7544qtsmj2rayg0lthvza9fau63ux0fstcz [0m
+
+[96mAlso, the author of core-js ([94m https://github.com/zloirock [96m) is looking for a good job -)[0m
+
+
+> es5-ext@0.10.62 postinstall H:\GitHub\eth-lending-market\packages\contract\node_modules\es5-ext
+>  node -e "try{require('./_postinstall')}catch(e){}" || exit 0
+
+
+> web3-bzz@1.7.4 postinstall H:\GitHub\eth-lending-market\packages\contract\node_modules\web3-bzz
+> echo "WARNING: the web3-bzz api will be deprecated in the next version"
+
+"WARNING: the web3-bzz api will be deprecated in the next version"
+
+> web3-shh@1.7.4 postinstall H:\GitHub\eth-lending-market\packages\contract\node_modules\web3-shh
+> echo "WARNING: the web3-shh api will be deprecated in the next version"
+
+"WARNING: the web3-shh api will be deprecated in the next version"
+
+> web3@1.7.4 postinstall H:\GitHub\eth-lending-market\packages\contract\node_modules\web3
+> echo "WARNING: the web3-shh and web3-bzz api will be deprecated in the next version"
+
+"WARNING: the web3-shh and web3-bzz api will be deprecated in the next version"
++ chai@4.2.0
++ ethers@5.4.7
++ hardhat-gas-reporter@1.0.8
++ typechain@8.1.0
++ hardhat@2.9.9
++ solidity-coverage@0.7.21
++ @types/chai@4.2.0
++ @types/mocha@9.1.0
++ @types/node@18.7.16
++ ts-node@10.9.1
++ @nomiclabs/hardhat-ethers@2.0.0
++ @nomicfoundation/hardhat-toolbox@1.0.1
++ @nomicfoundation/hardhat-chai-matchers@1.0.0
++ @nomicfoundation/hardhat-network-helpers@1.0.0
++ @typechain/hardhat@6.1.2
++ typescript@4.8.2
++ @nomiclabs/hardhat-etherscan@3.0.0
++ @ethersproject/abi@5.7.0
++ @ethersproject/providers@5.7.0
++ @typechain/ethers-v5@10.1.0
+added 640 packages from 559 contributors, removed 37 packages, updated 12 packages, moved 4 packages and audited 906 packages in 143.663s
+
+83 packages are looking for funding
+  run `npm fund` for details
+
+found 4 moderate severity vulnerabilities
+  run `npm audit fix` to fix them, or `npm audit` for details
