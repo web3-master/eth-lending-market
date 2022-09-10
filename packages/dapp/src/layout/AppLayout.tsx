@@ -4,8 +4,12 @@ import { Content, Footer, Header } from "antd/lib/layout/layout";
 import logo from "../images/logo.png";
 import AppMenu from "./AppMenu";
 import Account from "../components/Account";
+import {useWeb3React} from "@web3-react/core";
+import {ActiveNetwork} from "../constants/Network";
+import WrongNetwork from "../containers/WrongNetwork";
 
 const AppLayout = ({children}: { children: ReactNode }) => {
+    const {active, account, activate, chainId} = useWeb3React();
     return (
         <Row>
             <Col span={24}>
@@ -29,7 +33,10 @@ const AppLayout = ({children}: { children: ReactNode }) => {
                         </Row>
                     </Header>
                     <Content>
-                        {children}
+                        {active && chainId == ActiveNetwork ? children :
+                            <WrongNetwork />
+                        }
+
                     </Content>
                     <Footer
                         style={{

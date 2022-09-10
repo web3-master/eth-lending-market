@@ -72,8 +72,11 @@ async function main() {
   console.log("cUSDC: ", cUSDC.address);
 
   const chainId = await deployer.getChainId();
-  const outputFileName = join(__dirname, `../../dapp/src/contract/${chainId}-comptroller.txt`);
-  writeFileSync(outputFileName, comptroller.address, {
+  const outputFileName = join(__dirname, `../../dapp/src/contract/${chainId}-comptroller.json`);
+  const fileContent = JSON.stringify({
+    address: comptroller.address
+  });
+  writeFileSync(outputFileName, fileContent, {
     flag: 'w',
   });
 }

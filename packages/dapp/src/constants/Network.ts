@@ -33,3 +33,5 @@ export const networkConfigs: Record<string, NetworkConfig> = {
         explorerLink: 'https://kovan.etherscan.io',
     },
 }
+
+export const ActiveNetwork: ChainId = ChainId.goerli;
