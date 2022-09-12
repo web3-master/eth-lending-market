@@ -13,12 +13,15 @@ import { join } from 'path';
 async function main() {
   const [deployer] = await ethers.getSigners();
   const UNI_PRICE = "25022748000000000000";
-  const USDC_PRICE = "1000000000000000000000000000000";
+  const USDC_PRICE = "1000000000000000000";
+  const AAVE_PRICE = "92500000000000000000";
+  const DAI_PRICE = "1000000000000000000";
+  const ETH_PRICE = "1738000000000000000000";
 
   // Deploy USDC ERC20
   const USDC: Erc20Token = await deployErc20Token(
       {
-        name: "USDC",
+        name: "USD Coin",
         symbol: "USDC",
         decimals: 6,
       },
@@ -29,13 +32,35 @@ async function main() {
   // Deploy UNI ERC20
   const UNI: Erc20Token = await deployErc20Token(
       {
-        name: "UNI",
+        name: "Uniswap",
         symbol: "UNI",
         decimals: 18,
       },
       deployer
   );
   console.log('UNI token deployed!');
+
+  // Deploy AAVE ERC20
+  const AAVE: Erc20Token = await deployErc20Token(
+      {
+        name: "Aave Token",
+        symbol: "AAVE",
+        decimals: 18,
+      },
+      deployer
+  );
+  console.log('AAVE token deployed!');
+
+  // Deploy DAI ERC20
+  const DAI: Erc20Token = await deployErc20Token(
+      {
+        name: "Dai Token",
+        symbol: "DAI",
+        decimals: 18,
+      },
+      deployer
+  );
+  console.log('DAI token deployed!');
 
   const ctokenArgs: CTokenDeployArg[] = [
     {
@@ -50,26 +75,36 @@ async function main() {
       underlyingPrice: USDC_PRICE,
       collateralFactor: "500000000000000000", // 50%
     },
+    {
+      cToken: "cAAVE",
+      underlying: AAVE.address,
+      underlyingPrice: AAVE_PRICE,
+      collateralFactor: "500000000000000000", // 50%
+    },
+    {
+      cToken: "cDAI",
+      underlying: DAI.address,
+      underlyingPrice: DAI_PRICE,
+      collateralFactor: "500000000000000000", // 50%
+    },
+    {
+      cToken: "cETH",
+      underlyingPrice: ETH_PRICE,
+      collateralFactor: "500000000000000000", // 50%
+    },
   ];
 
   const { comptroller, cTokens, priceOracle, interestRateModels } =
       await deployCompoundV2(ctokenArgs, deployer);
-  console.log('Compound contracts deployed!');
 
   var tx = await comptroller._setCloseFactor(parseUnits("0.5", 18).toString());
   await tx.wait();
-  console.log('Comptroller._setCloseFactor() finished!');
 
   tx = await comptroller._setLiquidationIncentive(parseUnits("1.08", 18));
   await tx.wait();
-  console.log('Comptroller._setLiquidationIncentive() finished!');
-
-  const { cUNI, cUSDC } = cTokens;
 
   console.log("Comptroller: ", comptroller.address);
   console.log("SimplePriceOralce: ", await comptroller.oracle());
-  console.log("cUNI: ", cUNI.address);
-  console.log("cUSDC: ", cUSDC.address);
 
   const chainId = await deployer.getChainId();
   const outputFileName = join(__dirname, `../../dapp/src/contract/${chainId}-comptroller.json`);
