@@ -7,9 +7,10 @@ import {ColumnsType} from "antd/es/table";
 import {Button, Modal, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
-import {Erc20Token} from "@thenextblock/hardhat-erc20";
+import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import TokenPrice from "../src/components/TokenPrice";
 import {formatPrice} from "../src/utils/PriceUtil";
+import {FAUCET_MINT_AMOUNT} from "../src/constants/Prices";
 
 interface DataType {
     key: string;
@@ -41,7 +42,7 @@ export default function Faucet() {
         setMinting(true);
 
         const tx = await lastMintToken.token.connect(library.getSigner()).mint(account,
-            BigNumber.from(10).mul(BigNumber.from(10).pow(lastMintToken.decimals)));
+            FAUCET_MINT_AMOUNT.mul(BigNumber.from(10).pow(lastMintToken.decimals)));
         const result = await tx.wait();
         setLastMintTxResult(result);
 
@@ -143,7 +144,7 @@ export default function Faucet() {
                     onCancel={() => setOpenMintModal(false)}
                 >
                   <p>Transaction Overview</p>
-                  Amount: 10 {lastMintToken.symbol}
+                  Amount: {FAUCET_MINT_AMOUNT.toNumber().toFixed(2)} {lastMintToken.symbol}
                 </Modal>
             }
         </>

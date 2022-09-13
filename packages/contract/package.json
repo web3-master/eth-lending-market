@@ -32,6 +32,6 @@
     "typescript": "^4.8.2"
   },
   "dependencies": {
-    "@dany-armstrong/hardhat-compound": "^1.0.4"
+    "@dany-armstrong/hardhat-compound": "^1.0.6"
   }
 }

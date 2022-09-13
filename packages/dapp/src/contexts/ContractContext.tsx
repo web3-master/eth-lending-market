@@ -11,12 +11,13 @@ import {
 } from "@dany-armstrong/hardhat-compound";
 import React, {PropsWithChildren, useContext, useEffect, useState} from "react";
 import {useWeb3React} from "@web3-react/core";
-import {ActiveNetwork} from "../constants/Network";
+import {ActiveNetwork, ETH_TOKEN_ADDRESS} from "../constants/Network";
 import {CTOKEN} from "@dany-armstrong/hardhat-compound/dist/src/configs";
 import {CTokenType} from "@dany-armstrong/hardhat-compound/dist/src/enums";
-import {Erc20Token} from "@thenextblock/hardhat-erc20";
-import {Erc20Token__factory} from "@thenextblock/hardhat-erc20/dist/typechain";
+import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
+import {Erc20Token__factory} from "@dany-armstrong/hardhat-erc20/dist/typechain";
 import {BigNumber} from "@ethersproject/bignumber";
+import {ETH_PRICE} from "../constants/Prices";
 
 export interface ContractContextData {
     comptroller: Comptroller;
@@ -71,12 +72,16 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
         const underlyingPrices: { [key: string]: BigNumber } = {};
         await Promise.all(cTokens.map(cToken => {
             return (async () => {
+                let underlyingAddress;
                 if (cToken.hasOwnProperty("underlying")) {
-                    const underlyingAddress = await cToken.underlying();
+                    underlyingAddress = await cToken.underlying();
                     underlyings[underlyingAddress] =
                         Erc20Token__factory.connect(underlyingAddress, library);
                     underlyingPrices[underlyingAddress] =
                         await priceOracle.getUnderlyingPrice(cToken.address);
+                } else {
+                    underlyingAddress = ETH_TOKEN_ADDRESS;
+                    underlyingPrices[underlyingAddress] = ETH_PRICE;
                 }
             })();
         }));
