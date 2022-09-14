@@ -4,11 +4,16 @@ import {useEffect, useMemo, useState} from "react";
 import {useWeb3React} from "@web3-react/core";
 import {BigNumber} from "@ethersproject/bignumber";
 import {ColumnsType} from "antd/es/table";
-import {Button, Table, Typography} from "antd";
+import {Button, Table, Typography, Space, Card} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
-import {formatPrice, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
+import {
+    formatPrice,
+    getRatePerYear,
+    getTotalBorrowInUSD,
+    getTotalSupplyInUSD
+} from "../src/utils/PriceUtil";
 import {ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
@@ -19,9 +24,9 @@ interface DataType {
     symbol: string;
     decimals: number;
     price: BigNumber,
-    totalSupply: BigNumber;
+    totalSupply: number;
     supplyApy: BigNumber;
-    totalBorrow: BigNumber;
+    totalBorrow: number;
     borrowApy: BigNumber;
     icon: any;
     token: Erc20Token;
@@ -36,28 +41,9 @@ export default function Markets() {
         comptroller
     }: ContractContextData = useContractContext();
     const [tokenData, setTokenData] = useState<DataType[]>([]);
-    // const [lastMintTxResult, setLastMintTxResult] = useState(null);
-
-    // const [lastMintToken, setLastMintToken] = useState(null);
-    // const [openMintModal, setOpenMintModal] = useState(false);
-    // const [minting, setMinting] = useState(false);
-    //
-    // const onMint = async (record: DataType) => {
-    //     setLastMintToken(record);
-    //     setOpenMintModal(true);
-    // };
-    //
-    // const onMintModalOk = async () => {
-    //     setMinting(true);
-    //
-    //     const tx = await lastMintToken.token.connect(library.getSigner()).mint(account,
-    //         BigNumber.from(10).mul(BigNumber.from(10).pow(lastMintToken.decimals)));
-    //     const result = await tx.wait();
-    //     setLastMintTxResult(result);
-    //
-    //     setMinting(false);
-    //     setOpenMintModal(false);
-    // }
+    const [totalSupply, setTotalSupply] = useState(0);
+    const [totalBorrow, setTotalBorrow] = useState(0);
+    const [lastTxResult, setLastTxResult] = useState(null);
 
     const onSupply = async (record: DataType) => {
         const signer = library.getSigner();
@@ -78,13 +64,14 @@ export default function Markets() {
         }
 
         tx = await cToken.connect(signer).mint(uniMintAmount);
-        await tx.wait();
+        const result = await tx.wait();
+        setLastTxResult(result);
     };
 
     const onBorrow = async (record: DataType) => {
         const signer = library.getSigner();
         const cToken: CTokenLike = record.key;
-        const borrowAmount = parseUnits("300", record.decimals); // supply 4 UNI
+        const borrowAmount = parseUnits("3", record.decimals); // supply 4 UNI
 
         const isEntered = await comptroller.checkMembership(account, cToken.address);
 
@@ -95,7 +82,8 @@ export default function Markets() {
         }
 
         tx = await cToken.connect(signer).borrow(borrowAmount);
-        await tx.wait();
+        const result = await tx.wait();
+        setLastTxResult(result);
     };
 
     const columns: ColumnsType<DataType> = useMemo(() => [
@@ -118,28 +106,28 @@ export default function Markets() {
             title: 'Total Supply',
             key: 'total supply',
             render: (_, record) => (
-                <div><span>${record.totalSupply.toString()}</span></div>
+                <div><span>${record.totalSupply.toLocaleString()}</span></div>
             ),
         },
         {
             title: 'Supply APY',
             key: 'supply apy',
             render: (_, record) => (
-                <div><span>{formatPrice(record.supplyApy, 18)}</span></div>
+                <div><span>{getRatePerYear(record.supplyApy)}%</span></div>
             ),
         },
         {
             title: 'Total Borrow',
             key: 'total borrow',
             render: (_, record) => (
-                <div><span>${formatPrice(record.totalBorrow, 18)}</span></div>
+                <div><span>${record.totalBorrow.toLocaleString()}</span></div>
             ),
         },
         {
             title: 'Borrow APY',
             key: 'borrow apy',
             render: (_, record) => (
-                <div><span>{formatPrice(record.borrowApy, 18)}</span></div>
+                <div><span>{getRatePerYear(record.borrowApy)}%</span></div>
             ),
         },
         {
@@ -162,6 +150,17 @@ export default function Markets() {
         },
     ], []);
 
+    const getTotalSupplyAndBorrow = (tokens: DataType[]): [number, number] => {
+        let totalSupply = 0;
+        let totalBorrow = 0;
+        tokens.forEach((value: DataType) => {
+            console.log('value', value);
+            totalSupply += value.totalSupply;
+            totalBorrow += value.totalBorrow;
+        });
+        return [totalSupply, totalBorrow];
+    }
+
     useEffect(() => {
         (async () => {
             if (cTokenUnderlyings != null && cTokens != null) {
@@ -182,15 +181,21 @@ export default function Markets() {
                                 exchangeRate,
                                 underlyingPrice
                             );
+                            const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
+                            const totalBorrowInUSD = getTotalBorrowInUSD(
+                                totalBorrowInUnderlyingToken,
+                                decimals,
+                                underlyingPrice
+                            );
                             const token: DataType = {
                                 key: cToken,
                                 name: tokenName,
                                 symbol: tokenSymbol,
                                 decimals: decimals,
                                 price: underlyingPrice,
-                                totalSupply: totalSupplyInUSD,
+                                totalSupply: totalSupplyInUSD.toNumber(),
                                 supplyApy: await cToken.supplyRatePerBlock(),
-                                totalBorrow: await cToken.totalBorrows(),
+                                totalBorrow: totalBorrowInUSD.toNumber(),
                                 borrowApy: await cToken.borrowRatePerBlock(),
                                 icon: tokenIcons[tokenSymbol.toLowerCase()],
                                 token: cTokenUnderlying
@@ -209,15 +214,21 @@ export default function Markets() {
                                 exchangeRate,
                                 underlyingPrice
                             );
+                            const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
+                            const totalBorrowInUSD = getTotalBorrowInUSD(
+                                totalBorrowInUnderlyingToken,
+                                18,
+                                underlyingPrice
+                            );
                             const token: DataType = {
                                 key: cToken,
                                 name: tokenName,
                                 symbol: tokenSymbol,
                                 decimals: 18,
                                 price: underlyingPrice,
-                                totalSupply: totalSupplyInUSD,
+                                totalSupply: totalSupplyInUSD.toNumber(),
                                 supplyApy: await cToken.supplyRatePerBlock(),
-                                totalBorrow: await cToken.totalBorrows(),
+                                totalBorrow: totalBorrowInUSD.toNumber(),
                                 borrowApy: await cToken.borrowRatePerBlock(),
                                 icon: tokenIcons[tokenSymbol.toLowerCase()],
                                 token: null
@@ -227,16 +238,31 @@ export default function Markets() {
                     })();
                 }));
                 setTokenData(tokens);
+
+                const [supply, borrow] = getTotalSupplyAndBorrow(tokens);
+                setTotalSupply(supply);
+                setTotalBorrow(borrow);
             }
         })();
-    }, [cTokens, cTokenUnderlyings]);
+    }, [cTokens, cTokenUnderlyings, lastTxResult]);
 
     return (
         <>
             <AppLayout>
                 <div style={{padding: '50px 200px'}}>
-                    <Typography.Title level={5}>All markets</Typography.Title>
+                    <Typography.Title level={5}>Market Overview</Typography.Title>
+                    <Space size='large'>
+                        <Card title='Total Supply'>
+                            <Typography.Title level={3}>${totalSupply.toLocaleString()}</Typography.Title>
+                        </Card>
+                        <Card title='Total Borrow'>
+                            <Typography.Title level={3}>${totalBorrow.toLocaleString()}</Typography.Title>
+                        </Card>
+                    </Space>
                     <br/>
+                    <br/>
+                    <br/>
+                    <Typography.Title level={5}>All markets</Typography.Title>
                     <Table columns={columns} dataSource={tokenData}
                            rowKey={(record: DataType) => record.key.address}/>
                 </div>
