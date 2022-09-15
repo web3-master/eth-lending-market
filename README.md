@@ -1,12 +1,13 @@
-![🏆](https://github.com/dany-armstrong/zoo-nft-market/blob/main/screenshot.jpg?raw=true)
+![🏆](https://github.com/dany-armstrong/eth-lending-market/blob/main/markets.jpg?raw=true)
+![🏆](https://github.com/dany-armstrong/eth-lending-market/blob/main/dai-detail.jpg?raw=true)
 
-# 🏆🏆🏆 Zoo NFT Market 🏆🏆🏆
+# 🏆🏆🏆 Eth Lending Market 🏆🏆🏆
 
-Simple but full fledged NFT market for all animals in the zoo.
+Compound/AAVE like decentralized lending borrowing market on ethereum goerli network.
 
 ## 📺 LIVE ON
 
-http://zoo-nft-market.surge.sh
+http://eth-lending-market.surge.sh
 
 ## 📜 Contract
 
@@ -20,13 +21,10 @@ http://zoo-nft-market.surge.sh
 
 ### 📝 Description
 
-This is hardhat based smart contract project and has 2 smart contracts for our zoo.
+This is hardhat based smart contract project that implements compound like lending/borrowing protocol.
 
-1. ERC721 token contract.
-   ([Ropsten Address](https://ropsten.etherscan.io/address/0x9f8e251f9C6fC66113EC4E20F41A10e08bca8847))
-
-2. NFT marketplace contract.
-   ([Ropsten Address](https://ropsten.etherscan.io/address/0xD42Bdf6009bDa56B01C2633AC6a532e5de610824))
+Comptroller contract.
+   ([Goerli Address](https://goerli.etherscan.io/address/0x9f8e251f9C6fC66113EC4E20F41A10e08bca8847))
 
 ## 📺 DApp
 
@@ -38,17 +36,18 @@ This is hardhat based smart contract project and has 2 smart contracts for our z
 
 > React.js: For our front end building.
 
-> ipfs: Decentralized storage service. We stores all images and metadata here.
+> TypeChain: Typescript code generator for smart contracts.
 
 ### 📝 Description
 
-This is react.js based decentralized front-end application for our animal owners and buyers.
+This is react.js based decentralized front-end application for decentralized lending borrowing market.
 Now it has the following features.
 
 1. Wallet connection.
    It only supports MetaMask now but I will grow this to support many more wallets.
-2. Mint.
-   Any user can mint his/her own animal's NFT here.
+2. Dashboard.
+   Any user can lend/borrow his/her own assets with colateral.
 3. Market.
-   All animals' NFTs are listed here.
-   It's very simple now, but will have many more interesting features soon.(like OpenSea)
+   All assets are listed here.
+4. Faucet.
+   Airdrop underlying ERC20 tokens so that users can use for test.
