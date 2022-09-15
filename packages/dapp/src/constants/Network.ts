@@ -37,3 +37,5 @@ export const networkConfigs: Record<string, NetworkConfig> = {
 export const ActiveNetwork: ChainId = ChainId.goerli;
 
 export const ETH_TOKEN_ADDRESS = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+export const ETH_NAME = "Ethereum ETH";
+export const ETH_SYMBOL = "ETH";

@@ -1,5 +1,5 @@
 import AppLayout from "../src/layout/AppLayout"
-import {Card, Col, Row, Skeleton} from "antd";
+import {Breadcrumb, Card, Col, Row, Skeleton} from "antd";
 import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../src/contexts/ContractContext";
 import {useRouter} from "next/router";
@@ -16,8 +16,9 @@ import {
     Mantissa
 } from "../src/utils/PriceUtil";
 import {tokenIcons} from "../src/constants/Images";
-import {ETH_TOKEN_ADDRESS} from "../src/constants/Network";
+import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import TokenProperty from "../src/components/TokenProperty";
+import Link from "next/link";
 
 interface CTokenInfo {
     name: string;
@@ -54,121 +55,73 @@ export default function Market() {
     const cTokenAddress = router.query.cToken;
 
     useEffect(() => {
-        const result = cTokens.find((value: CTokenLike) => value.address == cTokenAddress);
-        setCToken(result);
+        if (cTokens != null) {
+            const result = cTokens.find((value: CTokenLike) => value.address == cTokenAddress);
+            setCToken(result);
+        }
     }, [cTokens]);
 
     useEffect(() => {
-        if (cToken != null) {
+        if (cToken != null && cTokenUnderlyings != null) {
             (async () => {
-                if (cToken.hasOwnProperty("underlying")) {
-                    const underlyingAddress = await cToken.underlying();
-                    const cTokenUnderlying = cTokenUnderlyings[underlyingAddress];
-                    const decimals = await cTokenUnderlying.decimals();
-                    const tokenName = await cTokenUnderlying.name();
-                    const tokenSymbol = await cTokenUnderlying.symbol();
-                    const totalSupplyInCToken = await cToken.totalSupply();
-                    const exchangeRate = await cToken.exchangeRateStored();
-                    const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
-                    const totalSupplyInUSD = getTotalSupplyInUSD(
-                        totalSupplyInCToken,
-                        decimals,
-                        exchangeRate,
-                        underlyingPrice
-                    );
-                    const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
-                    const totalBorrowInUSD = getTotalBorrowInUSD(
-                        totalBorrowInUnderlyingToken,
-                        decimals,
-                        underlyingPrice
-                    );
-                    const marketLiquidity = getMarketLiquidityInUnderlyingToken(
-                        totalSupplyInCToken,
-                        decimals,
-                        exchangeRate
-                    );
+                const isErc20 = cToken.hasOwnProperty("underlying");
 
-                    const reserveFactorMantissa = await cToken.reserveFactorMantissa();
-                    const reserveFactor = reserveFactorMantissa.mul(100 * 10).div(
-                        Mantissa).toNumber() / 10;
+                const underlyingAddress = isErc20 ? await cToken.underlying() : ETH_TOKEN_ADDRESS;
+                const cTokenUnderlying = isErc20 ? cTokenUnderlyings[underlyingAddress] : null;
+                const decimals = isErc20 ? await cTokenUnderlying.decimals() : 18;
+                const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
+                const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
+                const totalSupplyInCToken = await cToken.totalSupply();
+                const exchangeRate = await cToken.exchangeRateStored();
+                const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
+                const totalSupplyInUSD = getTotalSupplyInUSD(
+                    totalSupplyInCToken,
+                    decimals,
+                    exchangeRate,
+                    underlyingPrice
+                );
+                const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
+                const totalBorrowInUSD = getTotalBorrowInUSD(
+                    totalBorrowInUnderlyingToken,
+                    decimals,
+                    underlyingPrice
+                );
+                const marketLiquidity = getMarketLiquidityInUnderlyingToken(
+                    totalSupplyInCToken,
+                    decimals,
+                    exchangeRate
+                );
 
-                    const [_, collateralFactorMintissa, __] = await comptroller.markets(cToken.address);
-                    const collateralFactor = collateralFactorMintissa.mul(100 * 10).div(
-                        Mantissa).toNumber() / 10;
-                    const tokenInfo: CTokenInfo = {
-                        name: tokenName,
-                        symbol: tokenSymbol,
-                        decimals: decimals,
-                        price: underlyingPrice,
-                        totalSupply: totalSupplyInUSD.toNumber(),
-                        supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
-                        totalBorrow: totalBorrowInUSD.toNumber(),
-                        borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
-                        icon: tokenIcons[tokenSymbol.toLowerCase()],
-                        underlyingToken: cTokenUnderlying,
-                        marketLiquidity: marketLiquidity,
-                        totalReserves: await cToken.totalReserves(),
-                        reserveFactor: reserveFactor,
-                        collateralFactor: collateralFactor,
-                        cTokenMinted: totalSupplyInCToken.toNumber(),
-                        exchangeRate: exchangeRate,
-                    };
-                    setCTokenInfo(tokenInfo);
-                } else {
-                    const underlyingAddress = ETH_TOKEN_ADDRESS;
-                    const tokenName = "Ethereum ETH";
-                    const tokenSymbol = "ETH";
-                    const totalSupplyInCToken = await cToken.totalSupply();
-                    const exchangeRate = await cToken.exchangeRateStored();
-                    const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
-                    const totalSupplyInUSD = getTotalSupplyInUSD(
-                        totalSupplyInCToken,
-                        18,
-                        exchangeRate,
-                        underlyingPrice
-                    );
-                    const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
-                    const totalBorrowInUSD = getTotalBorrowInUSD(
-                        totalBorrowInUnderlyingToken,
-                        18,
-                        underlyingPrice
-                    );
-                    const marketLiquidity = getMarketLiquidityInUnderlyingToken(
-                        totalSupplyInCToken,
-                        18,
-                        exchangeRate
-                    );
+                const reserveFactorMantissa = await cToken.reserveFactorMantissa();
+                const reserveFactor = reserveFactorMantissa.mul(100 * 10).div(
+                    Mantissa).toNumber() / 10;
 
-                    const reserveFactorMantissa = await cToken.reserveFactorMantissa();
-                    const reserveFactor = reserveFactorMantissa.mul(100 * 10).div(
-                        Mantissa).toNumber() / 10;
+                const [_, collateralFactorMintissa, __] = await comptroller.markets(cToken.address);
+                const collateralFactor = collateralFactorMintissa.mul(100 * 10).div(
+                    Mantissa).toNumber() / 10;
 
-                    const [_, collateralFactorMintissa, __] = await comptroller.markets(cToken.address);
-                    const collateralFactor = collateralFactorMintissa.mul(100 * 10).div(
-                        Mantissa).toNumber() / 10;
-                    const tokenInfo: CTokenInfo = {
-                        name: tokenName,
-                        symbol: tokenSymbol,
-                        decimals: 18,
-                        price: underlyingPrice,
-                        totalSupply: totalSupplyInUSD.toNumber(),
-                        supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
-                        totalBorrow: totalBorrowInUSD.toNumber(),
-                        borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
-                        icon: tokenIcons[tokenSymbol.toLowerCase()],
-                        underlyingToken: null,
-                        marketLiquidity: marketLiquidity,
-                        totalReserves: await cToken.totalReserves(),
-                        reserveFactor: reserveFactor,
-                        collateralFactor: collateralFactor,
-                        cTokenMinted: totalSupplyInCToken.toNumber(),
-                        exchangeRate: exchangeRate,
-                    };
-                    setCTokenInfo(tokenInfo);
-                }
+                const tokenInfo: CTokenInfo = {
+                    name: tokenName,
+                    symbol: tokenSymbol,
+                    decimals: decimals,
+                    price: underlyingPrice,
+                    totalSupply: totalSupplyInUSD.toNumber(),
+                    supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
+                    totalBorrow: totalBorrowInUSD.toNumber(),
+                    borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
+                    icon: tokenIcons[tokenSymbol.toLowerCase()],
+                    underlyingToken: cTokenUnderlying,
+                    marketLiquidity: marketLiquidity,
+                    totalReserves: await cToken.totalReserves(),
+                    reserveFactor: reserveFactor,
+                    collateralFactor: collateralFactor,
+                    cTokenMinted: totalSupplyInCToken.toNumber(),
+                    exchangeRate: exchangeRate,
+                };
+                setCTokenInfo(tokenInfo);
             })();
         }
-    }, [cToken])
+    }, [cToken, cTokenUnderlyings])
 
     const interestModelChart = () => {
         return <Card title="Interest Model Chart">
@@ -177,7 +130,7 @@ export default function Market() {
     }
 
     const marketDetailRow = (label, value) => {
-        return <Row justify="space-between" style={{marginBottom: 20}}>
+        return <Row justify="space-between" style={{marginTop: 10, marginBottom: 10}}>
             <Col><span style={{color: 'gray'}}>{label}</span></Col>
             <Col><span style={{fontWeight: 'bold'}}>{value}</span></Col>
         </Row>
@@ -200,8 +153,11 @@ export default function Market() {
                             cTokenInfo.reserveFactor + "%")}
                         {marketDetailRow("Collateral Factor",
                             cTokenInfo.collateralFactor + "%")}
-                        {marketDetailRow("c" + cTokenInfo.symbol, cTokenInfo.cTokenMinted.toLocaleString())}
-                        {marketDetailRow("Exchange Rate", `1 c${cTokenInfo.symbol} = ${cTokenInfo.exchangeRate.div(Mantissa).toNumber()} ${cTokenInfo.symbol}`)}
+                        {marketDetailRow("c" + cTokenInfo.symbol,
+                            cTokenInfo.cTokenMinted.toLocaleString())}
+                        {marketDetailRow("Exchange Rate",
+                            `1 c${cTokenInfo.symbol} = ${cTokenInfo.exchangeRate.div(
+                                Mantissa).toNumber()} ${cTokenInfo.symbol}`)}
                     </>
                     : <Skeleton/>}
             </Card>
@@ -212,9 +168,18 @@ export default function Market() {
         <AppLayout>
             <Row style={{paddingTop: 50}} justify="center">
                 <Col style={{width: '1200px'}}>
-                    <Row justify="space-between">
-                        <Col>
-                            {cTokenInfo != null ?
+                    {cTokenInfo != null &&
+                        <Breadcrumb>
+                          <Breadcrumb.Item><Link href="/markets">Markets</Link></Breadcrumb.Item>
+                          <Breadcrumb.Item>{cTokenInfo.symbol}</Breadcrumb.Item>
+                        </Breadcrumb>
+                    }
+
+                    <br/>
+
+                    {cTokenInfo != null ?
+                        <Row justify="space-between">
+                            <Col>
                                 <div style={{
                                     display: 'flex',
                                     flexDirection: 'row',
@@ -224,12 +189,9 @@ export default function Market() {
                                     <div style={{marginLeft: 10}}>
                                         <span style={{fontSize: 40}}>{cTokenInfo.name}</span>
                                     </div>
-                                </div> :
-                                <Skeleton/>
-                            }
-                        </Col>
-                        <Col>
-                            {cTokenInfo != null ?
+                                </div>
+                            </Col>
+                            <Col>
                                 <Row gutter={40}>
                                     <Col>
                                         <TokenProperty label="Total Supply"
@@ -237,7 +199,8 @@ export default function Market() {
                                                        suffix={null}/>
                                     </Col>
                                     <Col>
-                                        <TokenProperty label="Supply APY" value={cTokenInfo.supplyApy}
+                                        <TokenProperty label="Supply APY"
+                                                       value={cTokenInfo.supplyApy}
                                                        prefix={null} suffix="%"/>
                                     </Col>
                                     <Col>
@@ -246,13 +209,14 @@ export default function Market() {
                                                        suffix={null}/>
                                     </Col>
                                     <Col>
-                                        <TokenProperty label="Borrow APY" value={cTokenInfo.borrowApy}
+                                        <TokenProperty label="Borrow APY"
+                                                       value={cTokenInfo.borrowApy}
                                                        prefix={null} suffix="%"/>
                                     </Col>
                                 </Row>
-                                : <Skeleton/>}
-                        </Col>
-                    </Row>
+                            </Col>
+                        </Row>
+                        : <Skeleton/>}
 
                     <br/>
 
@@ -264,8 +228,8 @@ export default function Market() {
                             {marketDetailInformation()}
                         </Col>
                     </Row>
-
                 </Col>
-            </Row>        </AppLayout>
+            </Row>
+        </AppLayout>
     )
 }

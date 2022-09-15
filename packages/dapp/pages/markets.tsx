@@ -9,7 +9,7 @@ import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import {getRatePerYear, getTotalBorrowInUSD, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
-import {ETH_TOKEN_ADDRESS} from "../src/constants/Network";
+import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
 import {useRouter} from "next/router";
@@ -93,8 +93,8 @@ export default function Markets() {
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>
-                    <span><Typography.Text
-                        strong={true}>{record.symbol}</Typography.Text></span><br/>
+                        <Typography.Text strong={true}>{record.symbol}</Typography.Text>
+                        <br/>
                         <span>{record.name}</span>
                     </div>
                 </div>
@@ -104,28 +104,28 @@ export default function Markets() {
             title: 'Total Supply',
             key: 'total supply',
             render: (_, record) => (
-                <div><span>${record.totalSupply.toLocaleString()}</span></div>
+                <span>${record.totalSupply.toLocaleString()}</span>
             ),
         },
         {
             title: 'Supply APY',
             key: 'supply apy',
             render: (_, record) => (
-                <div><span>{record.supplyApy}%</span></div>
+                <span>{record.supplyApy}%</span>
             ),
         },
         {
             title: 'Total Borrow',
             key: 'total borrow',
             render: (_, record) => (
-                <div><span>${record.totalBorrow.toLocaleString()}</span></div>
+                <span>${record.totalBorrow.toLocaleString()}</span>
             ),
         },
         {
             title: 'Borrow APY',
             key: 'borrow apy',
             render: (_, record) => (
-                <div><span>{record.borrowApy}%</span></div>
+                <span>{record.borrowApy}%</span>
             ),
         },
         {
@@ -152,7 +152,6 @@ export default function Markets() {
         let totalSupply = 0;
         let totalBorrow = 0;
         tokens.forEach((value: DataType) => {
-            console.log('value', value);
             totalSupply += value.totalSupply;
             totalBorrow += value.totalBorrow;
         });
@@ -164,75 +163,43 @@ export default function Markets() {
             if (cTokenUnderlyings != null && cTokens != null) {
                 const tokens = await Promise.all(cTokens.map(cToken => {
                     return (async () => {
-                        if (cToken.hasOwnProperty("underlying")) {
-                            const underlyingAddress = await cToken.underlying();
-                            const cTokenUnderlying = cTokenUnderlyings[underlyingAddress];
-                            const decimals = await cTokenUnderlying.decimals();
-                            const tokenName = await cTokenUnderlying.name();
-                            const tokenSymbol = await cTokenUnderlying.symbol();
-                            const totalSupplyInCToken = await cToken.totalSupply();
-                            const exchangeRate = await cToken.exchangeRateStored();
-                            const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
-                            const totalSupplyInUSD = getTotalSupplyInUSD(
-                                totalSupplyInCToken,
-                                decimals,
-                                exchangeRate,
-                                underlyingPrice
-                            );
-                            const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
-                            const totalBorrowInUSD = getTotalBorrowInUSD(
-                                totalBorrowInUnderlyingToken,
-                                decimals,
-                                underlyingPrice
-                            );
-                            const token: DataType = {
-                                key: cToken,
-                                name: tokenName,
-                                symbol: tokenSymbol,
-                                decimals: decimals,
-                                price: underlyingPrice,
-                                totalSupply: totalSupplyInUSD.toNumber(),
-                                supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
-                                totalBorrow: totalBorrowInUSD.toNumber(),
-                                borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
-                                icon: tokenIcons[tokenSymbol.toLowerCase()],
-                                token: cTokenUnderlying
-                            };
-                            return token;
-                        } else {
-                            const underlyingAddress = ETH_TOKEN_ADDRESS;
-                            const tokenName = "Ethereum ETH";
-                            const tokenSymbol = "ETH";
-                            const totalSupplyInCToken = await cToken.totalSupply();
-                            const exchangeRate = await cToken.exchangeRateStored();
-                            const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
-                            const totalSupplyInUSD = getTotalSupplyInUSD(
-                                totalSupplyInCToken,
-                                18,
-                                exchangeRate,
-                                underlyingPrice
-                            );
-                            const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
-                            const totalBorrowInUSD = getTotalBorrowInUSD(
-                                totalBorrowInUnderlyingToken,
-                                18,
-                                underlyingPrice
-                            );
-                            const token: DataType = {
-                                key: cToken,
-                                name: tokenName,
-                                symbol: tokenSymbol,
-                                decimals: 18,
-                                price: underlyingPrice,
-                                totalSupply: totalSupplyInUSD.toNumber(),
-                                supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
-                                totalBorrow: totalBorrowInUSD.toNumber(),
-                                borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
-                                icon: tokenIcons[tokenSymbol.toLowerCase()],
-                                token: null
-                            };
-                            return token;
-                        }
+                        const isErc20 = cToken.hasOwnProperty("underlying");
+                        const underlyingAddress = isErc20 ? await cToken.underlying()
+                            : ETH_TOKEN_ADDRESS;
+                        const cTokenUnderlying = isErc20 ? cTokenUnderlyings[underlyingAddress]
+                            : null;
+                        const decimals = isErc20 ? await cTokenUnderlying.decimals() : 18;
+                        const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
+                        const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
+                        const totalSupplyInCToken = await cToken.totalSupply();
+                        const exchangeRate = await cToken.exchangeRateStored();
+                        const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
+                        const totalSupplyInUSD = getTotalSupplyInUSD(
+                            totalSupplyInCToken,
+                            decimals,
+                            exchangeRate,
+                            underlyingPrice
+                        );
+                        const totalBorrowInUnderlyingToken = await cToken.totalBorrows();
+                        const totalBorrowInUSD = getTotalBorrowInUSD(
+                            totalBorrowInUnderlyingToken,
+                            decimals,
+                            underlyingPrice
+                        );
+                        const token: DataType = {
+                            key: cToken,
+                            name: tokenName,
+                            symbol: tokenSymbol,
+                            decimals: decimals,
+                            price: underlyingPrice,
+                            totalSupply: totalSupplyInUSD.toNumber(),
+                            supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
+                            totalBorrow: totalBorrowInUSD.toNumber(),
+                            borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
+                            icon: tokenIcons[tokenSymbol.toLowerCase()],
+                            token: cTokenUnderlying
+                        };
+                        return token;
                     })();
                 }));
                 setTokenData(tokens);
@@ -245,40 +212,40 @@ export default function Markets() {
     }, [cTokens, cTokenUnderlyings, lastTxResult]);
 
     return (
-        <>
-            <AppLayout>
-                <Row style={{paddingTop: 50}} justify="center">
-                    <Col style={{width: '1200px'}}>
-                        <Typography.Title level={3}>Market Overview</Typography.Title>
-                            <Row gutter={40}>
-                                <Col>
-                                    <TokenProperty label="Supply Supply" value={totalSupply}
-                                                   prefix="$" suffix=""/>
-                                </Col>
-                                <Col>
-                                    <TokenProperty label="Total Borrow"
-                                                   value={totalBorrow} prefix="$"
-                                                   suffix={null}/>
-                                </Col>
-                            </Row>
-                        <br/>
-                        <br/>
-                        <Typography.Title level={3}>All Markets</Typography.Title>
-                        {tokenData.length > 0 ?
-                            <Table columns={columns} dataSource={tokenData}
-                                   rowKey={(record: DataType) => record.key.address}
-                                   onRow={(record: DataType, rowIndex: number) => {
-                                       return {
-                                           onClick: event => {
-                                               router.push(`/market?cToken=${record.key.address}`)
-                                           }
-                                       };
-                                   }}
-                            />
-                            : <Skeleton/>
-                        }
-                    </Col></Row>
-            </AppLayout>
-        </>
+        <AppLayout>
+            <Row style={{paddingTop: 50}} justify="center">
+                <Col style={{width: '1200px'}}>
+                    <Typography.Title level={3}>Market Overview</Typography.Title>
+                    <Row gutter={40}>
+                        <Col>
+                            <TokenProperty label="Supply Supply" value={totalSupply}
+                                           prefix="$" suffix=""/>
+                        </Col>
+                        <Col>
+                            <TokenProperty label="Total Borrow"
+                                           value={totalBorrow} prefix="$"
+                                           suffix={null}/>
+                        </Col>
+                    </Row>
+
+                    <br/>
+                    <br/>
+
+                    <Typography.Title level={3}>All Markets</Typography.Title>
+                    {tokenData.length > 0 ?
+                        <Table columns={columns} dataSource={tokenData}
+                               rowKey={(record: DataType) => record.key.address}
+                               onRow={(record: DataType, rowIndex: number) => {
+                                   return {
+                                       onClick: event => {
+                                           router.push(`/market?cToken=${record.key.address}`)
+                                       }
+                                   };
+                               }}
+                        />
+                        : <Skeleton/>
+                    }
+                </Col></Row>
+        </AppLayout>
     )
 }
