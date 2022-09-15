@@ -4,7 +4,7 @@ import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../src/contexts/ContractContext";
 import {useRouter} from "next/router";
 import {useEffect, useState} from "react";
-import {CTokenLike} from "@dany-armstrong/hardhat-compound";
+import {CTokenLike, InterestRateModel__factory} from "@dany-armstrong/hardhat-compound";
 import {BigNumber} from "@ethersproject/bignumber";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import {
@@ -19,6 +19,8 @@ import {tokenIcons} from "../src/constants/Images";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import TokenProperty from "../src/components/TokenProperty";
 import Link from "next/link";
+import {ParentSize} from "@visx/responsive";
+import InterestModelChart from "../src/components/InterestModelChart";
 
 interface CTokenInfo {
     name: string;
@@ -40,6 +42,12 @@ interface CTokenInfo {
     exchangeRate: BigNumber;
 }
 
+export interface Rate {
+    utilization: number;
+    supply: number;
+    borrow: number;
+}
+
 export default function Market() {
     const router = useRouter();
     const {active, account, activate, library, connector} = useWeb3React();
@@ -51,7 +59,8 @@ export default function Market() {
         cTokenUnderlyingPrices,
         comptroller
     }: ContractContextData = useContractContext();
-
+    const [rates, setRates] = useState<Rate[]>();
+    const [currentUtilizationRate, setCurrentUtilizationRate] = useState(0);
     const cTokenAddress = router.query.cToken;
 
     useEffect(() => {
@@ -60,6 +69,35 @@ export default function Market() {
             setCToken(result);
         }
     }, [cTokens]);
+
+    const calcRates = async () => {
+        let rates: Rate[] = [];
+        const b = 1.0;
+        const address = await cToken.interestRateModel();
+        const interestRateModel = InterestRateModel__factory.connect(address, library);
+
+        for (var util = 0; util <= 100; util += 5) {
+            const rate: Rate = {utilization: 0, borrow: 0, supply: 0};
+            const c = (b * 100 / util) - b;
+            rate.utilization = util;
+            if (util == 0) {
+                const borrowRatePerBlock = await interestRateModel.getBorrowRate(0, 0, 0);
+                rate.borrow = getRatePerYear(borrowRatePerBlock);
+                const supplyRatePerBlock = await interestRateModel.getSupplyRate(0, 0, 0, 0);
+                rate.supply = getRatePerYear(supplyRatePerBlock);
+            } else {
+                const borrowRatePerBlock = await interestRateModel.getBorrowRate(c.toFixed(),
+                    b.toFixed(), 0);
+                rate.borrow = getRatePerYear(borrowRatePerBlock);
+                const supplyRatePerBlock = await interestRateModel.getSupplyRate(c.toFixed(),
+                    b.toFixed(), 0, 0);
+                rate.supply = getRatePerYear(supplyRatePerBlock);
+            }
+            rates.push(rate);
+        }
+
+        setRates(rates);
+    }
 
     useEffect(() => {
         if (cToken != null && cTokenUnderlyings != null) {
@@ -119,13 +157,27 @@ export default function Market() {
                     exchangeRate: exchangeRate,
                 };
                 setCTokenInfo(tokenInfo);
+
+                const cashMantissa = await cToken.getCash();
+                const utilizationRate = totalBorrowInUnderlyingToken.mul(100 * 10).div(
+                    cashMantissa.add(totalBorrowInUnderlyingToken)).toNumber() / 10;
+                setCurrentUtilizationRate(utilizationRate);
             })();
+            calcRates();
         }
     }, [cToken, cTokenUnderlyings])
 
     const interestModelChart = () => {
-        return <Card title="Interest Model Chart">
-
+        return <Card title="Interest Rate Model">
+            {rates != null ?
+                <div style={{width: '100%', height: 300}}>
+                    <ParentSize>
+                        {(parent) => (
+                            <InterestModelChart width={parent.width} height={parent.height}
+                                                rates={rates}
+                                                currentUtilizationRate={currentUtilizationRate}/>
+                        )}
+                    </ParentSize></div> : <Skeleton/>}
         </Card>
     }
 
