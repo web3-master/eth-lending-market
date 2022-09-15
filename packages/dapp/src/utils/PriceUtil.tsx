@@ -10,9 +10,16 @@ export const formatPrice = (priceInWei: BigNumber, decimals: number) => {
 export const getTotalSupplyInUSD = (cTokenSupply: BigNumber, decimals: number,
     exchangeRate: BigNumber,
     underlyingTokenPrice: BigNumber): BigNumber => {
-    const usd = cTokenSupply.mul(exchangeRate.div(Mantissa)).div(BigNumber.from(10).pow(decimals)).mul(
+    const usd = cTokenSupply.mul(exchangeRate.div(Mantissa)).div(
+        BigNumber.from(10).pow(decimals)).mul(
         underlyingTokenPrice.div(Mantissa));
     return usd;
+}
+
+export const getMarketLiquidityInUnderlyingToken = (cTokenSupply: BigNumber, decimals: number,
+    exchangeRate: BigNumber): number => {
+    return cTokenSupply.mul(exchangeRate.div(Mantissa)).div(
+        BigNumber.from(10).pow(decimals)).toNumber();
 }
 
 export const getTotalBorrowInUSD = (underlyingTokenAmount: BigNumber, decimals: number,

@@ -4,11 +4,10 @@ import {useEffect, useMemo, useState} from "react";
 import {useWeb3React} from "@web3-react/core";
 import {BigNumber} from "@ethersproject/bignumber";
 import {ColumnsType} from "antd/es/table";
-import {Button, Modal, Table, Typography} from "antd";
+import {Button, Col, Modal, Row, Skeleton, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
-import TokenPrice from "../src/components/TokenPrice";
 import {formatPrice} from "../src/utils/PriceUtil";
 import {FAUCET_MINT_AMOUNT} from "../src/constants/Prices";
 
@@ -128,11 +127,15 @@ export default function Faucet() {
     return (
         <>
             <AppLayout>
-                <div style={{padding: '50px 200px'}}>
-                    <Typography.Title level={5}>All assets</Typography.Title>
-                    <br/>
-                    <Table columns={columns} dataSource={tokenData}/>
-                </div>
+                <Row style={{paddingTop: 50}} justify="center">
+                    <Col style={{width: '1200px'}}>
+                        <Typography.Title level={3}>All Assets</Typography.Title>
+                        {tokenData.length > 0 ?
+                            <Table columns={columns} dataSource={tokenData}/>
+                            :
+                            <Skeleton/>}
+                    </Col>
+                </Row>
             </AppLayout>
 
             {lastMintToken != null &&

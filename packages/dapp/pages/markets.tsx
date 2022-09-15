@@ -4,19 +4,16 @@ import {useEffect, useMemo, useState} from "react";
 import {useWeb3React} from "@web3-react/core";
 import {BigNumber} from "@ethersproject/bignumber";
 import {ColumnsType} from "antd/es/table";
-import {Button, Table, Typography, Space, Card} from "antd";
+import {Button, Col, Row, Skeleton, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
-import {
-    formatPrice,
-    getRatePerYear,
-    getTotalBorrowInUSD,
-    getTotalSupplyInUSD
-} from "../src/utils/PriceUtil";
+import {getRatePerYear, getTotalBorrowInUSD, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
 import {ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
+import {useRouter} from "next/router";
+import TokenProperty from "../src/components/TokenProperty";
 
 interface DataType {
     key: CTokenLike;
@@ -25,14 +22,15 @@ interface DataType {
     decimals: number;
     price: BigNumber,
     totalSupply: number;
-    supplyApy: BigNumber;
+    supplyApy: number;
     totalBorrow: number;
-    borrowApy: BigNumber;
+    borrowApy: number;
     icon: any;
     token: Erc20Token;
 }
 
 export default function Markets() {
+    const router = useRouter();
     const {active, account, activate, library, connector} = useWeb3React();
     const {
         cTokens,
@@ -113,7 +111,7 @@ export default function Markets() {
             title: 'Supply APY',
             key: 'supply apy',
             render: (_, record) => (
-                <div><span>{getRatePerYear(record.supplyApy)}%</span></div>
+                <div><span>{record.supplyApy}%</span></div>
             ),
         },
         {
@@ -127,7 +125,7 @@ export default function Markets() {
             title: 'Borrow APY',
             key: 'borrow apy',
             render: (_, record) => (
-                <div><span>{getRatePerYear(record.borrowApy)}%</span></div>
+                <div><span>{record.borrowApy}%</span></div>
             ),
         },
         {
@@ -194,9 +192,9 @@ export default function Markets() {
                                 decimals: decimals,
                                 price: underlyingPrice,
                                 totalSupply: totalSupplyInUSD.toNumber(),
-                                supplyApy: await cToken.supplyRatePerBlock(),
+                                supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
                                 totalBorrow: totalBorrowInUSD.toNumber(),
-                                borrowApy: await cToken.borrowRatePerBlock(),
+                                borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
                                 icon: tokenIcons[tokenSymbol.toLowerCase()],
                                 token: cTokenUnderlying
                             };
@@ -227,9 +225,9 @@ export default function Markets() {
                                 decimals: 18,
                                 price: underlyingPrice,
                                 totalSupply: totalSupplyInUSD.toNumber(),
-                                supplyApy: await cToken.supplyRatePerBlock(),
+                                supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
                                 totalBorrow: totalBorrowInUSD.toNumber(),
-                                borrowApy: await cToken.borrowRatePerBlock(),
+                                borrowApy: getRatePerYear(await cToken.borrowRatePerBlock()),
                                 icon: tokenIcons[tokenSymbol.toLowerCase()],
                                 token: null
                             };
@@ -249,23 +247,37 @@ export default function Markets() {
     return (
         <>
             <AppLayout>
-                <div style={{padding: '50px 200px'}}>
-                    <Typography.Title level={5}>Market Overview</Typography.Title>
-                    <Space size='large'>
-                        <Card title='Total Supply'>
-                            <Typography.Title level={3}>${totalSupply.toLocaleString()}</Typography.Title>
-                        </Card>
-                        <Card title='Total Borrow'>
-                            <Typography.Title level={3}>${totalBorrow.toLocaleString()}</Typography.Title>
-                        </Card>
-                    </Space>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <Typography.Title level={5}>All markets</Typography.Title>
-                    <Table columns={columns} dataSource={tokenData}
-                           rowKey={(record: DataType) => record.key.address}/>
-                </div>
+                <Row style={{paddingTop: 50}} justify="center">
+                    <Col style={{width: '1200px'}}>
+                        <Typography.Title level={3}>Market Overview</Typography.Title>
+                            <Row gutter={40}>
+                                <Col>
+                                    <TokenProperty label="Supply Supply" value={totalSupply}
+                                                   prefix="$" suffix=""/>
+                                </Col>
+                                <Col>
+                                    <TokenProperty label="Total Borrow"
+                                                   value={totalBorrow} prefix="$"
+                                                   suffix={null}/>
+                                </Col>
+                            </Row>
+                        <br/>
+                        <br/>
+                        <Typography.Title level={3}>All Markets</Typography.Title>
+                        {tokenData.length > 0 ?
+                            <Table columns={columns} dataSource={tokenData}
+                                   rowKey={(record: DataType) => record.key.address}
+                                   onRow={(record: DataType, rowIndex: number) => {
+                                       return {
+                                           onClick: event => {
+                                               router.push(`/market?cToken=${record.key.address}`)
+                                           }
+                                       };
+                                   }}
+                            />
+                            : <Skeleton/>
+                        }
+                    </Col></Row>
             </AppLayout>
         </>
     )
