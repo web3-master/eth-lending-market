@@ -8,7 +8,12 @@ import {Button, Col, Row, Skeleton, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
-import {getRatePerYear, getTotalBorrowInUSD, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
+import {
+    getRatePerYear,
+    getTotalBorrowInUSD,
+    getTotalSupplyInUSD,
+    Mantissa
+} from "../src/utils/PriceUtil";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
@@ -20,7 +25,6 @@ interface DataType {
     name: string;
     symbol: string;
     decimals: number;
-    price: BigNumber,
     totalSupply: number;
     supplyApy: number;
     totalBorrow: number;
@@ -69,7 +73,7 @@ export default function Markets() {
     const onBorrow = async (record: DataType) => {
         const signer = library.getSigner();
         const cToken: CTokenLike = record.key;
-        const borrowAmount = parseUnits("3", record.decimals); // supply 4 UNI
+        const borrowAmount = parseUnits("1000", record.decimals); // supply 4 UNI
 
         const isEntered = await comptroller.checkMembership(account, cToken.address);
 
@@ -132,7 +136,8 @@ export default function Markets() {
             title: 'Supply',
             key: 'supply',
             render: (_, record) => (
-                <Button onClick={() => {
+                <Button onClick={(event) => {
+                    event.stopPropagation();
                     onSupply(record)
                 }}>Supply</Button>
             ),
@@ -141,7 +146,8 @@ export default function Markets() {
             title: 'Borrow',
             key: 'borrow',
             render: (_, record) => (
-                <Button onClick={() => {
+                <Button onClick={(event) => {
+                    event.stopPropagation();
                     onBorrow(record)
                 }}>Borrow</Button>
             ),
@@ -172,6 +178,7 @@ export default function Markets() {
                         const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
                         const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
                         const totalSupplyInCToken = await cToken.totalSupply();
+                        const cTokenDecimals = await cToken.decimals();
                         const exchangeRate = await cToken.exchangeRateStored();
                         const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
                         const totalSupplyInUSD = getTotalSupplyInUSD(
@@ -191,7 +198,6 @@ export default function Markets() {
                             name: tokenName,
                             symbol: tokenSymbol,
                             decimals: decimals,
-                            price: underlyingPrice,
                             totalSupply: totalSupplyInUSD.toNumber(),
                             supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
                             totalBorrow: totalBorrowInUSD.toNumber(),

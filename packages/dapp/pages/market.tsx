@@ -12,7 +12,7 @@ import {
     getMarketLiquidityInUnderlyingToken,
     getRatePerYear,
     getTotalBorrowInUSD,
-    getTotalSupplyInUSD,
+    getTotalSupplyInUSD, getUnderlyingTokenPerCToken,
     Mantissa
 } from "../src/utils/PriceUtil";
 import {tokenIcons} from "../src/constants/Images";
@@ -38,8 +38,8 @@ interface CTokenInfo {
     totalReserves: BigNumber;
     reserveFactor: number;
     collateralFactor: number;
-    cTokenMinted: number;
-    exchangeRate: BigNumber;
+    cTokenMinted: string;
+    underlyingTokensPerCToken: number;
 }
 
 export interface Rate {
@@ -107,6 +107,7 @@ export default function Market() {
                 const underlyingAddress = isErc20 ? await cToken.underlying() : ETH_TOKEN_ADDRESS;
                 const cTokenUnderlying = isErc20 ? cTokenUnderlyings[underlyingAddress] : null;
                 const decimals = isErc20 ? await cTokenUnderlying.decimals() : 18;
+                const cTokenDecimals = isErc20 ? await cToken.decimals() : 18;
                 const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
                 const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
                 const totalSupplyInCToken = await cToken.totalSupply();
@@ -153,8 +154,8 @@ export default function Market() {
                     totalReserves: await cToken.totalReserves(),
                     reserveFactor: reserveFactor,
                     collateralFactor: collateralFactor,
-                    cTokenMinted: totalSupplyInCToken.toNumber(),
-                    exchangeRate: exchangeRate,
+                    cTokenMinted: formatPrice(totalSupplyInCToken, cTokenDecimals),
+                    underlyingTokensPerCToken: getUnderlyingTokenPerCToken(exchangeRate, cTokenDecimals, decimals),
                 };
                 setCTokenInfo(tokenInfo);
 
@@ -194,7 +195,7 @@ export default function Market() {
                 {cTokenInfo != null ?
                     <>
                         {marketDetailRow("Price",
-                            "$" + formatPrice(cTokenInfo.price, cTokenInfo.decimals))}
+                            "$" + formatPrice(cTokenInfo.price, 18))}
                         {marketDetailRow("Market Liquidity",
                             cTokenInfo.marketLiquidity.toLocaleString() + " " + cTokenInfo.symbol)}
                         {marketDetailRow("Reserves",
@@ -206,10 +207,9 @@ export default function Market() {
                         {marketDetailRow("Collateral Factor",
                             cTokenInfo.collateralFactor + "%")}
                         {marketDetailRow("c" + cTokenInfo.symbol,
-                            cTokenInfo.cTokenMinted.toLocaleString())}
+                            cTokenInfo.cTokenMinted)}
                         {marketDetailRow("Exchange Rate",
-                            `1 c${cTokenInfo.symbol} = ${cTokenInfo.exchangeRate.div(
-                                Mantissa).toNumber()} ${cTokenInfo.symbol}`)}
+                            `1 c${cTokenInfo.symbol} = ${cTokenInfo.underlyingTokensPerCToken.toLocaleString()} ${cTokenInfo.symbol}`)}
                     </>
                     : <Skeleton/>}
             </Card>
