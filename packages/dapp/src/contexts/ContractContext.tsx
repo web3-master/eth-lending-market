@@ -18,6 +18,11 @@ import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import {Erc20Token__factory} from "@dany-armstrong/hardhat-erc20/dist/typechain";
 import {BigNumber} from "@ethersproject/bignumber";
 import {ETH_PRICE} from "../constants/Prices";
+import {
+    CErc20,
+    CErc20Delegator,
+    CErc20Immutable
+} from "@dany-armstrong/hardhat-compound/dist/typechain";
 
 export interface ContractContextData {
     comptroller: Comptroller;
@@ -67,14 +72,15 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
     }
 
     const loadCTokenUnderlyings = async (priceOracle: SimplePriceOracle,
-        cTokens: CTokenLike[]): Promise<[Record<CTokenLike, Erc20Token>, Record<CTokenLike, BigNumber>]> => {
+        cTokens: CTokenLike[]): Promise<[{ [key: string]: Erc20Token }, { [key: string]: BigNumber }]> => {
         const underlyings: { [key: string]: Erc20Token } = {};
         const underlyingPrices: { [key: string]: BigNumber } = {};
         await Promise.all(cTokens.map(cToken => {
             return (async () => {
                 let underlyingAddress;
                 if (cToken.hasOwnProperty("underlying")) {
-                    underlyingAddress = await cToken.underlying();
+                    underlyingAddress =
+                        await (cToken as CErc20 | CErc20Immutable | CErc20Delegator).underlying();
                     underlyings[underlyingAddress] =
                         Erc20Token__factory.connect(underlyingAddress, library);
                     underlyingPrices[underlyingAddress] =

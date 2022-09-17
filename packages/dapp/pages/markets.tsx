@@ -2,23 +2,22 @@ import AppLayout from "../src/layout/AppLayout"
 import {ContractContextData, useContractContext} from "../src/contexts/ContractContext";
 import {useEffect, useMemo, useState} from "react";
 import {useWeb3React} from "@web3-react/core";
-import {BigNumber} from "@ethersproject/bignumber";
 import {ColumnsType} from "antd/es/table";
 import {Button, Col, Row, Skeleton, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
-import {
-    getRatePerYear,
-    getTotalBorrowInUSD,
-    getTotalSupplyInUSD,
-    Mantissa
-} from "../src/utils/PriceUtil";
+import {getRatePerYear, getTotalBorrowInUSD, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
 import {useRouter} from "next/router";
 import TokenProperty from "../src/components/TokenProperty";
+import {
+    CErc20,
+    CErc20Delegator,
+    CErc20Immutable
+} from "@dany-armstrong/hardhat-compound/dist/typechain";
 
 interface DataType {
     key: CTokenLike;
@@ -170,7 +169,8 @@ export default function Markets() {
                 const tokens = await Promise.all(cTokens.map(cToken => {
                     return (async () => {
                         const isErc20 = cToken.hasOwnProperty("underlying");
-                        const underlyingAddress = isErc20 ? await cToken.underlying()
+                        const underlyingAddress = isErc20
+                            ? await (cToken as CErc20 | CErc20Immutable | CErc20Delegator).underlying()
                             : ETH_TOKEN_ADDRESS;
                         const cTokenUnderlying = isErc20 ? cTokenUnderlyings[underlyingAddress]
                             : null;

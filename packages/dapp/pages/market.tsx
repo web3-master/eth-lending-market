@@ -24,6 +24,11 @@ import {ParentSize} from "@visx/responsive";
 import InterestModelChart from "../src/components/InterestModelChart";
 import {SearchOutlined} from "@ant-design/icons";
 import {getExplorerLinkWithChainIdAndAddress} from "../src/utils/NetworkUtil";
+import {
+    CErc20,
+    CErc20Delegator,
+    CErc20Immutable
+} from "@dany-armstrong/hardhat-compound/dist/typechain";
 
 interface CTokenInfo {
     name: string;
@@ -109,7 +114,9 @@ export default function Market() {
             (async () => {
                 const isErc20 = cToken.hasOwnProperty("underlying");
 
-                const underlyingAddress = isErc20 ? await cToken.underlying() : ETH_TOKEN_ADDRESS;
+                const underlyingAddress = isErc20
+                    ? await (cToken as CErc20 | CErc20Immutable | CErc20Delegator).underlying()
+                    : ETH_TOKEN_ADDRESS;
                 const cTokenUnderlying = isErc20 ? cTokenUnderlyings[underlyingAddress] : null;
                 const decimals = isErc20 ? await cTokenUnderlying.decimals() : 18;
                 const cTokenDecimals = isErc20 ? await cToken.decimals() : 18;
@@ -264,7 +271,8 @@ export default function Market() {
                                     </div>
                                     <Tooltip title="View token contract on etherscan">
                                         <Button size="small" shape="circle" icon={<SearchOutlined/>}
-                                                onClick={() => onViewContract()} style={{marginTop: 10}}/>
+                                                onClick={() => onViewContract()}
+                                                style={{marginTop: 10}}/>
                                     </Tooltip>
                                 </div>
                             </Col>
