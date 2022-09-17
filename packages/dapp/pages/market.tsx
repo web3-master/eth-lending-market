@@ -1,9 +1,9 @@
 import AppLayout from "../src/layout/AppLayout"
-import {Breadcrumb, Card, Col, Row, Skeleton} from "antd";
+import {Breadcrumb, Button, Card, Col, Progress, Row, Skeleton, Tooltip} from "antd";
 import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../src/contexts/ContractContext";
 import {useRouter} from "next/router";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {CTokenLike, InterestRateModel__factory} from "@dany-armstrong/hardhat-compound";
 import {BigNumber} from "@ethersproject/bignumber";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
@@ -12,7 +12,8 @@ import {
     getMarketLiquidityInUnderlyingToken,
     getRatePerYear,
     getTotalBorrowInUSD,
-    getTotalSupplyInUSD, getUnderlyingTokenPerCToken,
+    getTotalSupplyInUSD,
+    getUnderlyingTokenPerCToken,
     Mantissa
 } from "../src/utils/PriceUtil";
 import {tokenIcons} from "../src/constants/Images";
@@ -21,6 +22,8 @@ import TokenProperty from "../src/components/TokenProperty";
 import Link from "next/link";
 import {ParentSize} from "@visx/responsive";
 import InterestModelChart from "../src/components/InterestModelChart";
+import {SearchOutlined} from "@ant-design/icons";
+import {getExplorerLinkWithChainIdAndAddress} from "../src/utils/NetworkUtil";
 
 interface CTokenInfo {
     name: string;
@@ -50,7 +53,7 @@ export interface Rate {
 
 export default function Market() {
     const router = useRouter();
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {active, account, activate, library, connector, chainId} = useWeb3React();
     const [cToken, setCToken] = useState<CTokenLike>();
     const [cTokenInfo, setCTokenInfo] = useState<CTokenInfo>();
     const {
@@ -60,6 +63,7 @@ export default function Market() {
         comptroller
     }: ContractContextData = useContractContext();
     const [rates, setRates] = useState<Rate[]>();
+    const [rateCalculationProgress, setRateCalculationProgress] = useState(0);
     const [currentUtilizationRate, setCurrentUtilizationRate] = useState(0);
     const cTokenAddress = router.query.cToken;
 
@@ -72,7 +76,7 @@ export default function Market() {
 
     const calcRates = async () => {
         let rates: Rate[] = [];
-        const b = 1.0;
+        const b = 1000.0;
         const address = await cToken.interestRateModel();
         const interestRateModel = InterestRateModel__factory.connect(address, library);
 
@@ -94,6 +98,7 @@ export default function Market() {
                 rate.supply = getRatePerYear(supplyRatePerBlock);
             }
             rates.push(rate);
+            setRateCalculationProgress(util);
         }
 
         setRates(rates);
@@ -155,12 +160,14 @@ export default function Market() {
                     reserveFactor: reserveFactor,
                     collateralFactor: collateralFactor,
                     cTokenMinted: formatPrice(totalSupplyInCToken, cTokenDecimals),
-                    underlyingTokensPerCToken: getUnderlyingTokenPerCToken(exchangeRate, cTokenDecimals, decimals),
+                    underlyingTokensPerCToken: getUnderlyingTokenPerCToken(exchangeRate,
+                        cTokenDecimals, decimals),
                 };
                 setCTokenInfo(tokenInfo);
 
                 const cashMantissa = await cToken.getCash();
-                const utilizationRate = totalBorrowInUnderlyingToken.mul(100 * 10).div(
+                const utilizationRate = cashMantissa.eq(0) && totalBorrowInUnderlyingToken.eq(0) ? 0
+                    : totalBorrowInUnderlyingToken.mul(100 * 10).div(
                     cashMantissa.add(totalBorrowInUnderlyingToken)).toNumber() / 10;
                 setCurrentUtilizationRate(utilizationRate);
             })();
@@ -178,12 +185,18 @@ export default function Market() {
                                                 rates={rates}
                                                 currentUtilizationRate={currentUtilizationRate}/>
                         )}
-                    </ParentSize></div> : <Skeleton/>}
+                    </ParentSize>
+                </div> :
+                <div>
+                    <Progress
+                        percent={rateCalculationProgress} style={{marginBottom: 20}}/>
+                    <Skeleton/>
+                </div>}
         </Card>
     }
 
     const marketDetailRow = (label, value) => {
-        return <Row justify="space-between" style={{marginTop: 10, marginBottom: 10}}>
+        return <Row justify="space-between" style={{marginTop: 20, marginBottom: 20}}>
             <Col><span style={{color: 'gray'}}>{label}</span></Col>
             <Col><span style={{fontWeight: 'bold'}}>{value}</span></Col>
         </Row>
@@ -216,6 +229,13 @@ export default function Market() {
         );
     }
 
+    const onViewContract = () => {
+        let link = getExplorerLinkWithChainIdAndAddress(chainId, cToken.address);
+        if (link != null) {
+            window.open(link);
+        }
+    }
+
     return (
         <AppLayout>
             <Row style={{paddingTop: 50}} justify="center">
@@ -228,6 +248,7 @@ export default function Market() {
                     }
 
                     <br/>
+                    <br/>
 
                     {cTokenInfo != null ?
                         <Row justify="space-between">
@@ -238,9 +259,13 @@ export default function Market() {
                                     alignItems: 'center'
                                 }}>
                                     <img src={cTokenInfo.icon.src} alt='icon' width={40}/>
-                                    <div style={{marginLeft: 10}}>
+                                    <div style={{marginLeft: 10, marginRight: 10}}>
                                         <span style={{fontSize: 40}}>{cTokenInfo.name}</span>
                                     </div>
+                                    <Tooltip title="View token contract on etherscan">
+                                        <Button size="small" shape="circle" icon={<SearchOutlined/>}
+                                                onClick={() => onViewContract()} style={{marginTop: 10}}/>
+                                    </Tooltip>
                                 </div>
                             </Col>
                             <Col>
@@ -271,8 +296,9 @@ export default function Market() {
                         : <Skeleton/>}
 
                     <br/>
+                    <br/>
 
-                    <Row gutter={20}>
+                    <Row gutter={40}>
                         <Col span={12}>
                             {interestModelChart()}
                         </Col>

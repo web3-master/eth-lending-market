@@ -50,7 +50,7 @@ export default function Markets() {
     const onSupply = async (record: DataType) => {
         const signer = library.getSigner();
         const cToken: CTokenLike = record.key;
-        const uniMintAmount = parseUnits("1000", record.decimals); // supply 4 UNI
+        const uniMintAmount = parseUnits("5000", record.decimals); // supply 4 UNI
 
         const isEntered = await comptroller.checkMembership(account, cToken.address);
 
@@ -73,7 +73,7 @@ export default function Markets() {
     const onBorrow = async (record: DataType) => {
         const signer = library.getSigner();
         const cToken: CTokenLike = record.key;
-        const borrowAmount = parseUnits("1000", record.decimals); // supply 4 UNI
+        const borrowAmount = parseUnits("5000", record.decimals); // supply 4 UNI
 
         const isEntered = await comptroller.checkMembership(account, cToken.address);
 
