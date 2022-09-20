@@ -30,6 +30,7 @@ export interface ContractContextData {
     cTokens: CTokenLike[];
     cTokenUnderlyings: { [key: string]: Erc20Token };
     cTokenUnderlyingPrices: { [key: string]: BigNumber };
+    myCTokens: CTokenLike[];
 }
 
 const ContractContext = React.createContext({} as ContractContextData);
@@ -39,11 +40,12 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
     const [comptroller, setComptroller] = useState<Comptroller>();
     const [priceOracle, setPriceOracle] = useState<SimplePriceOracle>();
     const [markets, setMarkets] = useState<CTokenLike[]>();
+    const [myCTokens, setMyCTokens] = useState<CTokenLike[]>();
     const [underlyings, setUnderlyings] = useState<{ [key: string]: Erc20Token }>();
     const [underlyingPrices, setUnderlyingPrices] = useState<{ [key: string]: BigNumber }>();
 
-    const loadCTokens = async (comptroller: Comptroller): Promise<CTokenLike[]> => {
-        const allMarkets: string[] = await comptroller.getAllMarkets();
+    const loadCTokens = async (comptroller: Comptroller, isMyCTokens: boolean = false): Promise<CTokenLike[]> => {
+        const allMarkets: string[] = isMyCTokens ? await comptroller.getAssetsIn(account) : await comptroller.getAllMarkets();
         const cTokens = allMarkets.map((address) => {
             return CToken__factory.connect(address, library);
         });
@@ -111,6 +113,9 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
                 const cTokens = await loadCTokens(comptrollerContract);
                 setMarkets(cTokens);
 
+                const myCTokens = await loadCTokens(comptrollerContract, true);
+                setMyCTokens(myCTokens);
+
                 const [cTokenUnderlyings, cTokenUnderlyingPrices] = await loadCTokenUnderlyings(
                     priceOracleContract,
                     cTokens);
@@ -128,6 +133,7 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
         cTokens: markets,
         cTokenUnderlyings: underlyings,
         cTokenUnderlyingPrices: underlyingPrices,
+        myCTokens: myCTokens,
     }}>{children}</ContractContext.Provider>);
 }
 

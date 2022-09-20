@@ -46,47 +46,6 @@ export default function Markets() {
     const [totalBorrow, setTotalBorrow] = useState(0);
     const [lastTxResult, setLastTxResult] = useState(null);
 
-    const onSupply = async (record: DataType) => {
-        const signer = library.getSigner();
-        const cToken: CTokenLike = record.key;
-        const uniMintAmount = parseUnits("5000", record.decimals); // supply 4 UNI
-
-        const isEntered = await comptroller.checkMembership(account, cToken.address);
-
-        let tx;
-        if (!isEntered) {
-            tx = await comptroller.connect(signer).enterMarkets([cToken.address]);
-            await tx.wait();
-        }
-
-        if (record.token != null) {
-            tx = await record.token.connect(signer).approve(cToken.address, uniMintAmount)
-            await tx.wait();
-        }
-
-        tx = await cToken.connect(signer).mint(uniMintAmount);
-        const result = await tx.wait();
-        setLastTxResult(result);
-    };
-
-    const onBorrow = async (record: DataType) => {
-        const signer = library.getSigner();
-        const cToken: CTokenLike = record.key;
-        const borrowAmount = parseUnits("5000", record.decimals); // supply 4 UNI
-
-        const isEntered = await comptroller.checkMembership(account, cToken.address);
-
-        let tx;
-        if (!isEntered) {
-            tx = await comptroller.connect(signer).enterMarkets([cToken.address]);
-            await tx.wait();
-        }
-
-        tx = await cToken.connect(signer).borrow(borrowAmount);
-        const result = await tx.wait();
-        setLastTxResult(result);
-    };
-
     const columns: ColumnsType<DataType> = useMemo(() => [
         {
             title: 'Asset',
@@ -129,26 +88,6 @@ export default function Markets() {
             key: 'borrow apy',
             render: (_, record) => (
                 <span>{record.borrowApy}%</span>
-            ),
-        },
-        {
-            title: 'Supply',
-            key: 'supply',
-            render: (_, record) => (
-                <Button onClick={(event) => {
-                    event.stopPropagation();
-                    onSupply(record)
-                }}>Supply</Button>
-            ),
-        },
-        {
-            title: 'Borrow',
-            key: 'borrow',
-            render: (_, record) => (
-                <Button onClick={(event) => {
-                    event.stopPropagation();
-                    onBorrow(record)
-                }}>Borrow</Button>
             ),
         },
     ], []);
@@ -224,7 +163,7 @@ export default function Markets() {
                     <Typography.Title level={3}>Market Overview</Typography.Title>
                     <Row gutter={40}>
                         <Col>
-                            <TokenProperty label="Supply Supply" value={totalSupply}
+                            <TokenProperty label="Total Supply" value={totalSupply}
                                            prefix="$" suffix=""/>
                         </Col>
                         <Col>
