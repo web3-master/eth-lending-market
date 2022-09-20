@@ -23,12 +23,15 @@ import {
     CErc20Delegator,
     CErc20Immutable
 } from "@dany-armstrong/hardhat-compound/dist/typechain";
+import SupplyModal from "../src/components/modals/SupplyModal";
+import {BigNumber} from "@ethersproject/bignumber";
 
-interface DataType {
+export interface DataType {
     key: CTokenLike;
     name: string;
     symbol: string;
     decimals: number;
+    underlyingPrice: BigNumber,
     totalSupply: number;
     supplyApy: number;
     totalBorrow: number;
@@ -54,29 +57,8 @@ export default function Dashboard() {
     const [lastTxResult, setLastTxResult] = useState(null);
     const [mySupplyTokenData, setMySupplyTokenData] = useState<DataType[]>([]);
     const [myBorrowTokenData, setMyBorrowTokenData] = useState<DataType[]>([]);
-
-    const onSupply = async (record: DataType) => {
-        const signer = library.getSigner();
-        const cToken: CTokenLike = record.key;
-        const uniMintAmount = parseUnits("5000", record.decimals); // supply 4 UNI
-
-        const isEntered = await comptroller.checkMembership(account, cToken.address);
-
-        let tx;
-        if (!isEntered) {
-            tx = await comptroller.connect(signer).enterMarkets([cToken.address]);
-            await tx.wait();
-        }
-
-        if (record.token != null) {
-            tx = await record.token.connect(signer).approve(cToken.address, uniMintAmount)
-            await tx.wait();
-        }
-
-        tx = await cToken.connect(signer).mint(uniMintAmount);
-        const result = await tx.wait();
-        setLastTxResult(result);
-    };
+    const [lastCTokenData, setLastCTokenData] = useState<DataType>();
+    const [showSupplyModal, setShowSupplyModal] = useState(false);
 
     const onBorrow = async (record: DataType) => {
         const signer = library.getSigner();
@@ -146,7 +128,8 @@ export default function Dashboard() {
             render: (_, record) => (
                 <Button onClick={(event) => {
                     event.stopPropagation();
-                    onSupply(record)
+                    setLastCTokenData(record);
+                    setShowSupplyModal(true);
                 }}>Supply</Button>
             ),
         },
@@ -289,6 +272,7 @@ export default function Dashboard() {
                             name: tokenName,
                             symbol: tokenSymbol,
                             decimals: decimals,
+                            underlyingPrice: underlyingPrice,
                             totalSupply: totalSupplyInUSD.toNumber(),
                             supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
                             totalBorrow: totalBorrowInUSD.toNumber(),
@@ -333,6 +317,7 @@ export default function Dashboard() {
                             name: tokenName,
                             symbol: tokenSymbol,
                             decimals: decimals,
+                            underlyingPrice: underlyingPrice,
                             totalSupply: totalSupplyInUSD.toNumber(),
                             supplyApy: getRatePerYear(await cToken.supplyRatePerBlock()),
                             totalBorrow: totalBorrowInUSD.toNumber(),
@@ -401,59 +386,71 @@ export default function Dashboard() {
     }
 
     return (
-        <AppLayout>
-            <Row style={{paddingTop: 50}} justify="center">
-                <Col style={{width: '1200px'}}>
-                    <Typography.Title level={3}>Your Overview</Typography.Title>
-                    <Row gutter={40}>
-                        <Col>
-                            <TokenProperty label="Total Supply" value={totalSupply}
-                                           prefix="$" suffix=""/>
-                        </Col>
-                        <Col>
-                            <TokenProperty label="Total Borrow"
-                                           value={totalBorrow} prefix="$"
-                                           suffix={null}/>
-                        </Col>
-                        <Col>
-                            <TokenProperty label="Collateral"
-                                           value={collateral} prefix="$"
-                                           suffix={null}/>
-                        </Col>
-                    </Row>
+        <>
+            <AppLayout>
+                <Row style={{paddingTop: 50}} justify="center">
+                    <Col style={{width: '1200px'}}>
+                        <Typography.Title level={3}>Your Overview</Typography.Title>
+                        <Row gutter={40}>
+                            <Col>
+                                <TokenProperty label="Total Supply" value={totalSupply}
+                                               prefix="$" suffix=""/>
+                            </Col>
+                            <Col>
+                                <TokenProperty label="Total Borrow"
+                                               value={totalBorrow} prefix="$"
+                                               suffix={null}/>
+                            </Col>
+                            <Col>
+                                <TokenProperty label="Collateral"
+                                               value={collateral} prefix="$"
+                                               suffix={null}/>
+                            </Col>
+                        </Row>
 
-                    <br/>
-                    <br/>
+                        <br/>
+                        <br/>
 
-                    <Row gutter={40}>
-                        <Col span={12}>
-                            <Typography.Title level={3}>Your Supplies</Typography.Title>
-                            {mySupplies()}
-                        </Col>
-                        <Col span={12}>
-                            <Typography.Title level={3}>Your Borrows</Typography.Title>
-                            {myBorrows()}
-                        </Col>
-                    </Row>
+                        <Row gutter={40}>
+                            <Col span={12}>
+                                <Typography.Title level={3}>Your Supplies</Typography.Title>
+                                {mySupplies()}
+                            </Col>
+                            <Col span={12}>
+                                <Typography.Title level={3}>Your Borrows</Typography.Title>
+                                {myBorrows()}
+                            </Col>
+                        </Row>
 
-                    <br/>
-                    <br/>
+                        <br/>
+                        <br/>
 
-                    <Typography.Title level={3}>All Markets</Typography.Title>
-                    {tokenData.length > 0 ?
-                        <Table columns={columns} dataSource={tokenData}
-                               rowKey={(record: DataType) => record.key.address}
-                               onRow={(record: DataType, rowIndex: number) => {
-                                   return {
-                                       onClick: event => {
-                                           router.push(`/market?cToken=${record.key.address}`)
-                                       }
-                                   };
-                               }}
-                        />
-                        : <Skeleton/>
-                    }
-                </Col></Row>
-        </AppLayout>
+                        <Typography.Title level={3}>All Markets</Typography.Title>
+                        {tokenData.length > 0 ?
+                            <Table columns={columns} dataSource={tokenData}
+                                   rowKey={(record: DataType) => record.key.address}
+                                   onRow={(record: DataType, rowIndex: number) => {
+                                       return {
+                                           onClick: event => {
+                                               router.push(`/market?cToken=${record.key.address}`)
+                                           }
+                                       };
+                                   }}
+                            />
+                            : <Skeleton/>
+                        }
+                    </Col></Row>
+            </AppLayout>
+            {showSupplyModal &&
+                <SupplyModal cTokenData={lastCTokenData}
+                             onClose={(result) => {
+                                 if (result != null) {
+                                     setLastTxResult(result);
+                                 }
+                                 setShowSupplyModal(false);
+                             }
+                             }/>
+            }
+        </>
     )
 }
