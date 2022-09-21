@@ -31,6 +31,7 @@ export interface ContractContextData {
     cTokenUnderlyings: { [key: string]: Erc20Token };
     cTokenUnderlyingPrices: { [key: string]: BigNumber };
     myCTokens: CTokenLike[];
+    reloadMyCTokens: Function;
 }
 
 const ContractContext = React.createContext({} as ContractContextData);
@@ -127,6 +128,11 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
         })();
     }, [active, chainId]);
 
+    const reloadMyCTokens = async () => {
+        const myCTokens = await loadCTokens(comptroller, true);
+        setMyCTokens(myCTokens);
+    }
+
     return (<ContractContext.Provider value={{
         comptroller: comptroller,
         priceOracle: priceOracle,
@@ -134,6 +140,7 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
         cTokenUnderlyings: underlyings,
         cTokenUnderlyingPrices: underlyingPrices,
         myCTokens: myCTokens,
+        reloadMyCTokens: reloadMyCTokens,
     }}>{children}</ContractContext.Provider>);
 }
 

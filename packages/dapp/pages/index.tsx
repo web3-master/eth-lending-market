@@ -14,7 +14,6 @@ import {
     Mantissa
 } from "../src/utils/PriceUtil";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
-import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
 import {useRouter} from "next/router";
 import TokenProperty from "../src/components/TokenProperty";
@@ -25,13 +24,14 @@ import {
 } from "@dany-armstrong/hardhat-compound/dist/typechain";
 import SupplyModal from "../src/components/modals/SupplyModal";
 import {BigNumber} from "@ethersproject/bignumber";
+import BorrowModal from "../src/components/modals/BorrowModal";
 
 export interface DataType {
     key: CTokenLike;
     name: string;
     symbol: string;
     decimals: number;
-    underlyingPrice: BigNumber,
+    underlyingPrice: BigNumber;
     totalSupply: number;
     supplyApy: number;
     totalBorrow: number;
@@ -45,6 +45,7 @@ export default function Dashboard() {
     const {active, account, activate, library, connector} = useWeb3React();
     const {
         myCTokens,
+        reloadMyCTokens,
         cTokens,
         cTokenUnderlyings,
         cTokenUnderlyingPrices,
@@ -59,24 +60,7 @@ export default function Dashboard() {
     const [myBorrowTokenData, setMyBorrowTokenData] = useState<DataType[]>([]);
     const [lastCTokenData, setLastCTokenData] = useState<DataType>();
     const [showSupplyModal, setShowSupplyModal] = useState(false);
-
-    const onBorrow = async (record: DataType) => {
-        const signer = library.getSigner();
-        const cToken: CTokenLike = record.key;
-        const borrowAmount = parseUnits("5000", record.decimals); // supply 4 UNI
-
-        const isEntered = await comptroller.checkMembership(account, cToken.address);
-
-        let tx;
-        if (!isEntered) {
-            tx = await comptroller.connect(signer).enterMarkets([cToken.address]);
-            await tx.wait();
-        }
-
-        tx = await cToken.connect(signer).borrow(borrowAmount);
-        const result = await tx.wait();
-        setLastTxResult(result);
-    };
+    const [showBorrowModal, setShowBorrowModal] = useState(false);
 
     const columns: ColumnsType<DataType> = useMemo(() => [
         {
@@ -139,7 +123,8 @@ export default function Dashboard() {
             render: (_, record) => (
                 <Button onClick={(event) => {
                     event.stopPropagation();
-                    onBorrow(record)
+                    setLastCTokenData(record);
+                    setShowBorrowModal(true);
                 }}>Borrow</Button>
             ),
         },
@@ -446,8 +431,20 @@ export default function Dashboard() {
                              onClose={(result) => {
                                  if (result != null) {
                                      setLastTxResult(result);
+                                     reloadMyCTokens();
                                  }
                                  setShowSupplyModal(false);
+                             }
+                             }/>
+            }
+            {showBorrowModal &&
+                <BorrowModal cTokenData={lastCTokenData}
+                             onClose={(result) => {
+                                 if (result != null) {
+                                     setLastTxResult(result);
+                                     reloadMyCTokens();
+                                 }
+                                 setShowBorrowModal(false);
                              }
                              }/>
             }
