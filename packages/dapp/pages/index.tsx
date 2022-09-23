@@ -26,6 +26,7 @@ import SupplyModal from "../src/components/modals/SupplyModal";
 import {BigNumber} from "@ethersproject/bignumber";
 import BorrowModal from "../src/components/modals/BorrowModal";
 import WithdrawModal from "../src/components/modals/WithdrawModal";
+import RepayModal from "../src/components/modals/RepayModal";
 
 export interface DataType {
     key: CTokenLike;
@@ -63,6 +64,7 @@ export default function Dashboard() {
     const [showSupplyModal, setShowSupplyModal] = useState(false);
     const [showBorrowModal, setShowBorrowModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [showRepayModal, setShowRepayModal] = useState(false);
 
     const columns: ColumnsType<DataType> = useMemo(() => [
         {
@@ -211,6 +213,8 @@ export default function Dashboard() {
             render: (_, record) => (
                 <Button onClick={(event) => {
                     event.stopPropagation();
+                    setLastCTokenData(record);
+                    setShowRepayModal(true);
                 }}>Replay</Button>
             ),
         },
@@ -454,14 +458,25 @@ export default function Dashboard() {
             }
             {showWithdrawModal &&
                 <WithdrawModal cTokenData={lastCTokenData}
-                             onClose={(result) => {
-                                 if (result != null) {
-                                     setLastTxResult(result);
-                                     reloadMyCTokens();
-                                 }
-                                 setShowWithdrawModal(false);
-                             }
-                             }/>
+                               onClose={(result) => {
+                                   if (result != null) {
+                                       setLastTxResult(result);
+                                       reloadMyCTokens();
+                                   }
+                                   setShowWithdrawModal(false);
+                               }
+                               }/>
+            }
+            {showRepayModal &&
+                <RepayModal cTokenData={lastCTokenData}
+                            onClose={(result) => {
+                                if (result != null) {
+                                    setLastTxResult(result);
+                                    reloadMyCTokens();
+                                }
+                                setShowRepayModal(false);
+                            }
+                            }/>
             }
         </>
     )
