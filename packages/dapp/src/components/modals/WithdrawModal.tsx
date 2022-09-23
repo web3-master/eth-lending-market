@@ -5,14 +5,14 @@ import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../../contexts/ContractContext";
 import TokenIconSymbol from "../TokenIconSymbol";
 import {BigNumber} from "@ethersproject/bignumber";
-import {Mantissa} from "../../utils/PriceUtil";
+import {getMarketLiquidityInUnderlyingToken, Mantissa} from "../../utils/PriceUtil";
 
-interface BorrowModalParam {
+interface WithdrawModalParam {
     cTokenData: DataType;
     onClose: Function
 }
 
-const BorrowModal = (props: BorrowModalParam) => {
+const WithdrawModal = (props: WithdrawModalParam) => {
     const {active, account, activate, library, connector} = useWeb3React();
     const {
         cTokenUnderlyings,
@@ -20,27 +20,32 @@ const BorrowModal = (props: BorrowModalParam) => {
         comptroller
     }: ContractContextData = useContractContext();
     const [processing, setProcessing] = useState(false);
-    const [currentWork, setCurrentWork] = useState("Borrow");
-    const [liquidity, setLiquidity] = useState(0);
-    const [maxBorrow, setMaxBorrow] = useState(0);
+    const [currentWork, setCurrentWork] = useState("Withdraw");
+    const [maxWithdraw, setMaxWithdraw] = useState(0);
     const [value, setValue] = useState(0);
 
     useEffect(() => {
         (async () => {
-            const underlyingTokenLiquidity = await props.cTokenData.key.getCash();
+
+            const accountSnapshot = await props.cTokenData.key.getAccountSnapshot(account);
+            const totalSupplyInCToken = accountSnapshot[1];
+            const exchangeRate = accountSnapshot[3];
+            const supplyUnderlyingToken = getMarketLiquidityInUnderlyingToken(totalSupplyInCToken,
+                props.cTokenData.decimals, exchangeRate);
+            setMaxWithdraw(supplyUnderlyingToken);
+
             const accountLiquidity = await comptroller.getAccountLiquidity(account);
             const liquidity = accountLiquidity[1].div(Mantissa).toNumber();
             const shortfall = accountLiquidity[2].div(Mantissa).toNumber();
             if (liquidity > 0) {
-                setLiquidity(liquidity);
-                setMaxBorrow(
+                setMaxWithdraw(
                     Math.min(liquidity / props.cTokenData.underlyingPrice.div(Mantissa).toNumber(),
-                        underlyingTokenLiquidity.div(
-                            BigNumber.from(10).pow(props.cTokenData.decimals)).toNumber()));
+                        supplyUnderlyingToken));
             } else if (shortfall > 0) {
                 alert('Your liquidity is not enough!');
                 props.onClose();
             }
+
         })();
     }, [comptroller, account]);
 
@@ -53,9 +58,9 @@ const BorrowModal = (props: BorrowModalParam) => {
             alert('Please input value!');
             return;
         }
-        const borrowAmount = BigNumber.from(value * 100).mul(
+        const withdrawAmount = BigNumber.from(value * 100).mul(
             BigNumber.from(10).pow(props.cTokenData.decimals)).div(100);
-        if (value > maxBorrow) {
+        if (value > maxWithdraw) {
             alert('Balance is not enough!');
             return;
         }
@@ -75,8 +80,8 @@ const BorrowModal = (props: BorrowModalParam) => {
                 await tx.wait();
             }
 
-            setCurrentWork("Borrowing...");
-            tx = await cToken.connect(signer).borrow(borrowAmount);
+            setCurrentWork("Withdrawing...");
+            tx = await cToken.connect(signer).redeemUnderlying(withdrawAmount);
             const result = await tx.wait();
 
             setCurrentWork("Success!");
@@ -85,14 +90,14 @@ const BorrowModal = (props: BorrowModalParam) => {
         } catch (e) {
             console.log('error', e);
             alert("Operation failed.");
-            setCurrentWork("Borrow");
+            setCurrentWork("Withdraw");
             setProcessing(false);
         }
     }
 
     return (
         <Modal
-            title={`Borrow ${props.cTokenData.symbol}`}
+            title={`Withdraw ${props.cTokenData.symbol}`}
             open={true}
             onOk={onModalOk}
             confirmLoading={processing}
@@ -121,11 +126,11 @@ const BorrowModal = (props: BorrowModalParam) => {
                 </Col>
             </Row>
             <span style={{fontSize: 14, color: 'gray'}}>
-                (Borrowable Max: {maxBorrow.toFixed(2)} {props.cTokenData.symbol})
+                (Withdrawable Max: {maxWithdraw.toFixed(2)} {props.cTokenData.symbol})
             </span>
 
         </Modal>
     );
 };
 
-export default BorrowModal;
+export default WithdrawModal;

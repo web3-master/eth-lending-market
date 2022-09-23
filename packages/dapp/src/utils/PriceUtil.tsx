@@ -19,8 +19,8 @@ export const getTotalSupplyInUSD = (cTokenSupply: BigNumber, underlyingTokenDeci
 
 export const getMarketLiquidityInUnderlyingToken = (cTokenSupply: BigNumber, decimals: number,
     exchangeRate: BigNumber): number => {
-    return cTokenSupply.mul(exchangeRate.div(Mantissa)).div(
-        BigNumber.from(10).pow(decimals)).toNumber();
+    return cTokenSupply.mul(exchangeRate).div(
+        BigNumber.from(10).pow(decimals)).div(Mantissa).toNumber();
 }
 
 export const getTotalBorrowInUSD = (underlyingTokenAmount: BigNumber, decimals: number,

@@ -25,6 +25,7 @@ import {
 import SupplyModal from "../src/components/modals/SupplyModal";
 import {BigNumber} from "@ethersproject/bignumber";
 import BorrowModal from "../src/components/modals/BorrowModal";
+import WithdrawModal from "../src/components/modals/WithdrawModal";
 
 export interface DataType {
     key: CTokenLike;
@@ -61,6 +62,7 @@ export default function Dashboard() {
     const [lastCTokenData, setLastCTokenData] = useState<DataType>();
     const [showSupplyModal, setShowSupplyModal] = useState(false);
     const [showBorrowModal, setShowBorrowModal] = useState(false);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
     const columns: ColumnsType<DataType> = useMemo(() => [
         {
@@ -166,6 +168,8 @@ export default function Dashboard() {
             render: (_, record) => (
                 <Button onClick={(event) => {
                     event.stopPropagation();
+                    setLastCTokenData(record);
+                    setShowWithdrawModal(true);
                 }}>Withdraw</Button>
             ),
         },
@@ -445,6 +449,17 @@ export default function Dashboard() {
                                      reloadMyCTokens();
                                  }
                                  setShowBorrowModal(false);
+                             }
+                             }/>
+            }
+            {showWithdrawModal &&
+                <WithdrawModal cTokenData={lastCTokenData}
+                             onClose={(result) => {
+                                 if (result != null) {
+                                     setLastTxResult(result);
+                                     reloadMyCTokens();
+                                 }
+                                 setShowWithdrawModal(false);
                              }
                              }/>
             }
