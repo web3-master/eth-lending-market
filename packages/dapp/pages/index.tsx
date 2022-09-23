@@ -11,7 +11,6 @@ import {
     getRatePerYear,
     getTotalBorrowInUSD,
     getTotalSupplyInUSD,
-    Mantissa
 } from "../src/utils/PriceUtil";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
@@ -27,6 +26,7 @@ import {BigNumber} from "@ethersproject/bignumber";
 import BorrowModal from "../src/components/modals/BorrowModal";
 import WithdrawModal from "../src/components/modals/WithdrawModal";
 import RepayModal from "../src/components/modals/RepayModal";
+import {Mantissa} from "../src/constants/Prices";
 
 export interface DataType {
     key: CTokenLike;
@@ -44,7 +44,7 @@ export interface DataType {
 
 export default function Dashboard() {
     const router = useRouter();
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account} = useWeb3React();
     const {
         myCTokens,
         reloadMyCTokens,
@@ -71,7 +71,6 @@ export default function Dashboard() {
             title: 'Asset',
             key: 'asset',
             render: (_, record) => (
-                // icon,
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>
@@ -139,7 +138,6 @@ export default function Dashboard() {
             title: 'Asset',
             key: 'asset',
             render: (_, record) => (
-                // icon,
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>
@@ -182,7 +180,6 @@ export default function Dashboard() {
             title: 'Asset',
             key: 'asset',
             render: (_, record) => (
-                // icon,
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>
@@ -208,14 +205,14 @@ export default function Dashboard() {
             ),
         },
         {
-            title: 'Replay',
-            key: 'replay',
+            title: 'Repay',
+            key: 'repay',
             render: (_, record) => (
                 <Button onClick={(event) => {
                     event.stopPropagation();
                     setLastCTokenData(record);
                     setShowRepayModal(true);
-                }}>Replay</Button>
+                }}>Repay</Button>
             ),
         },
     ], []);
@@ -245,7 +242,6 @@ export default function Dashboard() {
                         const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
                         const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
                         const totalSupplyInCToken = await cToken.totalSupply();
-                        const cTokenDecimals = await cToken.decimals();
                         const exchangeRate = await cToken.exchangeRateStored();
                         const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
                         const totalSupplyInUSD = getTotalSupplyInUSD(

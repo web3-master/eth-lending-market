@@ -37,16 +37,18 @@ export interface ContractContextData {
 const ContractContext = React.createContext({} as ContractContextData);
 
 export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
-    const {active, account, activate, chainId, connector, library} = useWeb3React();
+    const {active, account, chainId, library} = useWeb3React();
     const [comptroller, setComptroller] = useState<Comptroller>();
     const [priceOracle, setPriceOracle] = useState<SimplePriceOracle>();
-    const [markets, setMarkets] = useState<CTokenLike[]>();
+    const [cTokens, setCTokens] = useState<CTokenLike[]>();
     const [myCTokens, setMyCTokens] = useState<CTokenLike[]>();
     const [underlyings, setUnderlyings] = useState<{ [key: string]: Erc20Token }>();
     const [underlyingPrices, setUnderlyingPrices] = useState<{ [key: string]: BigNumber }>();
 
-    const loadCTokens = async (comptroller: Comptroller, isMyCTokens: boolean = false): Promise<CTokenLike[]> => {
-        const allMarkets: string[] = isMyCTokens ? await comptroller.getAssetsIn(account) : await comptroller.getAllMarkets();
+    const loadCTokens = async (comptroller: Comptroller,
+        isMyCTokens: boolean = false): Promise<CTokenLike[]> => {
+        const allMarkets: string[] = isMyCTokens ? await comptroller.getAssetsIn(account)
+            : await comptroller.getAllMarkets();
         const cTokens = allMarkets.map((address) => {
             return CToken__factory.connect(address, library);
         });
@@ -112,7 +114,7 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
                 setPriceOracle(priceOracleContract);
 
                 const cTokens = await loadCTokens(comptrollerContract);
-                setMarkets(cTokens);
+                setCTokens(cTokens);
 
                 const myCTokens = await loadCTokens(comptrollerContract, true);
                 setMyCTokens(myCTokens);
@@ -136,7 +138,7 @@ export const ContractContextProvider = ({children}: PropsWithChildren<{}>) => {
     return (<ContractContext.Provider value={{
         comptroller: comptroller,
         priceOracle: priceOracle,
-        cTokens: markets,
+        cTokens: cTokens,
         cTokenUnderlyings: underlyings,
         cTokenUnderlyingPrices: underlyingPrices,
         myCTokens: myCTokens,

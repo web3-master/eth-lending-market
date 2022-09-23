@@ -8,7 +8,7 @@ import {
     LogoutOutlined,
     SearchOutlined
 } from "@ant-design/icons";
-import {formatAddress} from "../../utils/AddressUtil";
+import {getShortenAddress} from "../../utils/AddressUtil";
 import {
     getExplorerLinkWithChainIdAndAddress,
     getNetworkNameWithChainId
@@ -38,7 +38,7 @@ const AccountDropdown = ({children}) => {
         overlay={
             <Menu onClick={onMenuItemClick}>
                 <Menu.Item icon={<BankOutlined/>}>
-                    {formatAddress(account)}
+                    {getShortenAddress(account)}
                 </Menu.Item>
                 <Menu.Divider/>
                 <Menu.Item icon={<CloudOutlined/>}>

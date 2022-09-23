@@ -23,7 +23,7 @@ interface DataType {
 }
 
 export default function Faucet() {
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account, library} = useWeb3React();
     const {cTokenUnderlyings, cTokenUnderlyingPrices}: ContractContextData = useContractContext();
     const [tokenData, setTokenData] = useState<DataType[]>([]);
     const [lastMintTxResult, setLastMintTxResult] = useState(null);
@@ -40,10 +40,14 @@ export default function Faucet() {
     const onMintModalOk = async () => {
         setMinting(true);
 
-        const tx = await lastMintToken.token.connect(library.getSigner()).mint(account,
-            FAUCET_MINT_AMOUNT.mul(BigNumber.from(10).pow(lastMintToken.decimals)));
-        const result = await tx.wait();
-        setLastMintTxResult(result);
+        try {
+            const tx = await lastMintToken.token.connect(library.getSigner()).mint(account,
+                FAUCET_MINT_AMOUNT.mul(BigNumber.from(10).pow(lastMintToken.decimals)));
+            const result = await tx.wait();
+            setLastMintTxResult(result);
+        } catch (e) {
+            alert("Operation failed.");
+        }
 
         setMinting(false);
         setOpenMintModal(false);
@@ -54,7 +58,6 @@ export default function Faucet() {
             title: 'Asset',
             key: 'asset',
             render: (_, record) => (
-                // icon,
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>

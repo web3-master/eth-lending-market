@@ -1,6 +1,5 @@
 import {BigNumber} from "@ethersproject/bignumber";
-
-export const Mantissa = BigNumber.from(10).pow(18);
+import {Mantissa} from "../constants/Prices";
 
 export const formatPrice = (priceInWei: BigNumber, decimals: number) => {
     const price = priceInWei.mul(100).div(BigNumber.from(10).pow(decimals));
@@ -8,26 +7,26 @@ export const formatPrice = (priceInWei: BigNumber, decimals: number) => {
 };
 
 export const getTotalSupplyInUSD = (cTokenSupply: BigNumber, underlyingTokenDecimals: number,
-    exchangeRate: BigNumber,
+    exchangeRateMantissa: BigNumber,
     underlyingTokenPrice: BigNumber): BigNumber => {
-    const usd = cTokenSupply.mul(
-        exchangeRate).mul(
+    return cTokenSupply.mul(
+        exchangeRateMantissa).mul(
         underlyingTokenPrice.div(Mantissa)).div(
         BigNumber.from(10).pow(underlyingTokenDecimals)).div(Mantissa);
-    return usd;
 }
 
-export const getMarketLiquidityInUnderlyingToken = (cTokenSupply: BigNumber, decimals: number,
-    exchangeRate: BigNumber): number => {
-    return cTokenSupply.mul(exchangeRate).div(
-        BigNumber.from(10).pow(decimals)).div(Mantissa).toNumber();
+export const getTotalSupplyInUnderlyingToken = (cTokenSupply: BigNumber,
+    underlyingTokenDecimals: number,
+    exchangeRateMantissa: BigNumber): number => {
+    return cTokenSupply.mul(exchangeRateMantissa).div(
+        BigNumber.from(10).pow(underlyingTokenDecimals)).div(Mantissa).toNumber();
 }
 
-export const getTotalBorrowInUSD = (underlyingTokenAmount: BigNumber, decimals: number,
+export const getTotalBorrowInUSD = (underlyingTokenAmount: BigNumber,
+    underlyingTokenDecimals: number,
     underlyingTokenPrice: BigNumber): BigNumber => {
-    const usd = underlyingTokenAmount.div(BigNumber.from(10).pow(decimals)).mul(
+    return underlyingTokenAmount.div(BigNumber.from(10).pow(underlyingTokenDecimals)).mul(
         underlyingTokenPrice.div(Mantissa));
-    return usd;
 }
 
 export const getRatePerYear = (ratePerBlock: BigNumber): number => {

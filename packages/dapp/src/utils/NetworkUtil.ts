@@ -8,7 +8,8 @@ export const getNetworkNameWithChainId = (chainId: ChainId): string => {
     return 'Unknown network';
 }
 
-export const getExplorerLinkWithChainIdAndAddress = (chainId: ChainId, address: string): string | null => {
+export const getExplorerLinkWithChainIdAndAddress = (chainId: ChainId,
+    address: string): string | null => {
     if (networkConfigs.hasOwnProperty(chainId)) {
         return networkConfigs[chainId].explorerLink + '/address/' + address;
     }

@@ -12,10 +12,8 @@ interface RepayModalParam {
 }
 
 const RepayModal = (props: RepayModalParam) => {
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account, library} = useWeb3React();
     const {
-        cTokenUnderlyings,
-        cTokenUnderlyingPrices,
         comptroller
     }: ContractContextData = useContractContext();
     const [processing, setProcessing] = useState(false);
@@ -41,6 +39,7 @@ const RepayModal = (props: RepayModalParam) => {
             alert('Please input value!');
             return;
         }
+
         const repayAmount = BigNumber.from(value * 100).mul(
             BigNumber.from(10).pow(props.cTokenData.decimals)).div(100);
         if (value > maxRepay) {
@@ -78,7 +77,6 @@ const RepayModal = (props: RepayModalParam) => {
             setProcessing(false);
             props.onClose(result);
         } catch (e) {
-            console.log('error', e);
             alert("Operation failed.");
             setCurrentWork("Repay");
             setProcessing(false);

@@ -9,12 +9,11 @@ import {BigNumber} from "@ethersproject/bignumber";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import {
     formatPrice,
-    getMarketLiquidityInUnderlyingToken,
     getRatePerYear,
     getTotalBorrowInUSD,
+    getTotalSupplyInUnderlyingToken,
     getTotalSupplyInUSD,
     getUnderlyingTokenPerCToken,
-    Mantissa
 } from "../src/utils/PriceUtil";
 import {tokenIcons} from "../src/constants/Images";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
@@ -29,6 +28,7 @@ import {
     CErc20Delegator,
     CErc20Immutable
 } from "@dany-armstrong/hardhat-compound/dist/typechain";
+import {Mantissa} from "../src/constants/Prices";
 
 interface CTokenInfo {
     name: string;
@@ -58,7 +58,7 @@ export interface Rate {
 
 export default function Market() {
     const router = useRouter();
-    const {active, account, activate, library, connector, chainId} = useWeb3React();
+    const {library, chainId} = useWeb3React();
     const [cToken, setCToken] = useState<CTokenLike>();
     const [cTokenInfo, setCTokenInfo] = useState<CTokenInfo>();
     const {
@@ -137,7 +137,7 @@ export default function Market() {
                     decimals,
                     underlyingPrice
                 );
-                const marketLiquidity = getMarketLiquidityInUnderlyingToken(
+                const marketLiquidity = getTotalSupplyInUnderlyingToken(
                     totalSupplyInCToken,
                     decimals,
                     exchangeRate

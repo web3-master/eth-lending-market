@@ -5,7 +5,7 @@ import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../../contexts/ContractContext";
 import TokenIconSymbol from "../TokenIconSymbol";
 import {BigNumber} from "@ethersproject/bignumber";
-import {Mantissa} from "../../utils/PriceUtil";
+import {Mantissa} from "../../constants/Prices";
 
 interface BorrowModalParam {
     cTokenData: DataType;
@@ -13,15 +13,12 @@ interface BorrowModalParam {
 }
 
 const BorrowModal = (props: BorrowModalParam) => {
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account, library} = useWeb3React();
     const {
-        cTokenUnderlyings,
-        cTokenUnderlyingPrices,
         comptroller
     }: ContractContextData = useContractContext();
     const [processing, setProcessing] = useState(false);
     const [currentWork, setCurrentWork] = useState("Borrow");
-    const [liquidity, setLiquidity] = useState(0);
     const [maxBorrow, setMaxBorrow] = useState(0);
     const [value, setValue] = useState(0);
 
@@ -32,7 +29,6 @@ const BorrowModal = (props: BorrowModalParam) => {
             const liquidity = accountLiquidity[1].div(Mantissa).toNumber();
             const shortfall = accountLiquidity[2].div(Mantissa).toNumber();
             if (liquidity > 0) {
-                setLiquidity(liquidity);
                 setMaxBorrow(
                     Math.min(liquidity / props.cTokenData.underlyingPrice.div(Mantissa).toNumber(),
                         underlyingTokenLiquidity.div(
@@ -53,6 +49,7 @@ const BorrowModal = (props: BorrowModalParam) => {
             alert('Please input value!');
             return;
         }
+
         const borrowAmount = BigNumber.from(value * 100).mul(
             BigNumber.from(10).pow(props.cTokenData.decimals)).div(100);
         if (value > maxBorrow) {
@@ -83,7 +80,6 @@ const BorrowModal = (props: BorrowModalParam) => {
             setProcessing(false);
             props.onClose(result);
         } catch (e) {
-            console.log('error', e);
             alert("Operation failed.");
             setCurrentWork("Borrow");
             setProcessing(false);

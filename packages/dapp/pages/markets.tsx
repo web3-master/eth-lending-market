@@ -1,15 +1,13 @@
 import AppLayout from "../src/layout/AppLayout"
 import {ContractContextData, useContractContext} from "../src/contexts/ContractContext";
 import {useEffect, useMemo, useState} from "react";
-import {useWeb3React} from "@web3-react/core";
 import {ColumnsType} from "antd/es/table";
-import {Button, Col, Row, Skeleton, Table, Typography} from "antd";
+import {Col, Row, Skeleton, Table, Typography} from "antd";
 import {DataType} from "csstype";
 import {tokenIcons} from "../src/constants/Images";
 import {Erc20Token} from "@dany-armstrong/hardhat-erc20";
 import {getRatePerYear, getTotalBorrowInUSD, getTotalSupplyInUSD} from "../src/utils/PriceUtil";
 import {ETH_NAME, ETH_SYMBOL, ETH_TOKEN_ADDRESS} from "../src/constants/Network";
-import {parseUnits} from "ethers/lib/utils";
 import {CTokenLike} from "@dany-armstrong/hardhat-compound";
 import {useRouter} from "next/router";
 import TokenProperty from "../src/components/TokenProperty";
@@ -34,24 +32,20 @@ interface DataType {
 
 export default function Markets() {
     const router = useRouter();
-    const {active, account, activate, library, connector} = useWeb3React();
     const {
         cTokens,
         cTokenUnderlyings,
         cTokenUnderlyingPrices,
-        comptroller
     }: ContractContextData = useContractContext();
     const [tokenData, setTokenData] = useState<DataType[]>([]);
     const [totalSupply, setTotalSupply] = useState(0);
     const [totalBorrow, setTotalBorrow] = useState(0);
-    const [lastTxResult, setLastTxResult] = useState(null);
 
     const columns: ColumnsType<DataType> = useMemo(() => [
         {
             title: 'Asset',
             key: 'asset',
             render: (_, record) => (
-                // icon,
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <img src={record.icon.src} alt='icon' width={40}/>
                     <div style={{marginLeft: 10}}>
@@ -117,7 +111,6 @@ export default function Markets() {
                         const tokenName = isErc20 ? await cTokenUnderlying.name() : ETH_NAME;
                         const tokenSymbol = isErc20 ? await cTokenUnderlying.symbol() : ETH_SYMBOL;
                         const totalSupplyInCToken = await cToken.totalSupply();
-                        const cTokenDecimals = await cToken.decimals();
                         const exchangeRate = await cToken.exchangeRateStored();
                         const underlyingPrice = cTokenUnderlyingPrices[underlyingAddress];
                         const totalSupplyInUSD = getTotalSupplyInUSD(
@@ -154,7 +147,7 @@ export default function Markets() {
                 setTotalBorrow(borrow);
             }
         })();
-    }, [cTokens, cTokenUnderlyings, lastTxResult]);
+    }, [cTokens, cTokenUnderlyings]);
 
     return (
         <AppLayout>

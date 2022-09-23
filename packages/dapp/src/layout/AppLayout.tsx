@@ -9,7 +9,7 @@ import {ActiveNetwork} from "../constants/Network";
 import WrongNetwork from "../containers/WrongNetwork";
 
 const AppLayout = ({children}: { children: ReactNode }) => {
-    const {active, account, activate, chainId} = useWeb3React();
+    const {active, chainId} = useWeb3React();
     return (
         <Row>
             <Col span={24}>
@@ -36,7 +36,6 @@ const AppLayout = ({children}: { children: ReactNode }) => {
                         {active && chainId == ActiveNetwork ? children :
                             <WrongNetwork />
                         }
-
                     </Content>
                     <Footer
                         style={{

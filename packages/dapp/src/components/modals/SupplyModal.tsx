@@ -14,10 +14,9 @@ interface SupplyModalParam {
 }
 
 const SupplyModal = (props: SupplyModalParam) => {
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account, library} = useWeb3React();
     const {
         cTokenUnderlyings,
-        cTokenUnderlyingPrices,
         comptroller
     }: ContractContextData = useContractContext();
     const [processing, setProcessing] = useState(false);
@@ -54,6 +53,7 @@ const SupplyModal = (props: SupplyModalParam) => {
             alert('Please input value!');
             return;
         }
+
         const supplyAmount = BigNumber.from(value * 100).mul(
             BigNumber.from(10).pow(props.cTokenData.decimals)).div(100);
         if (supplyAmount.gt(balance)) {

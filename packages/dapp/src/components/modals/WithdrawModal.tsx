@@ -5,7 +5,8 @@ import {useWeb3React} from "@web3-react/core";
 import {ContractContextData, useContractContext} from "../../contexts/ContractContext";
 import TokenIconSymbol from "../TokenIconSymbol";
 import {BigNumber} from "@ethersproject/bignumber";
-import {getMarketLiquidityInUnderlyingToken, Mantissa} from "../../utils/PriceUtil";
+import {getTotalSupplyInUnderlyingToken} from "../../utils/PriceUtil";
+import {Mantissa} from "../../constants/Prices";
 
 interface WithdrawModalParam {
     cTokenData: DataType;
@@ -13,10 +14,8 @@ interface WithdrawModalParam {
 }
 
 const WithdrawModal = (props: WithdrawModalParam) => {
-    const {active, account, activate, library, connector} = useWeb3React();
+    const {account, library} = useWeb3React();
     const {
-        cTokenUnderlyings,
-        cTokenUnderlyingPrices,
         comptroller
     }: ContractContextData = useContractContext();
     const [processing, setProcessing] = useState(false);
@@ -26,13 +25,11 @@ const WithdrawModal = (props: WithdrawModalParam) => {
 
     useEffect(() => {
         (async () => {
-
             const accountSnapshot = await props.cTokenData.key.getAccountSnapshot(account);
             const totalSupplyInCToken = accountSnapshot[1];
             const exchangeRate = accountSnapshot[3];
-            const supplyUnderlyingToken = getMarketLiquidityInUnderlyingToken(totalSupplyInCToken,
+            const supplyUnderlyingToken = getTotalSupplyInUnderlyingToken(totalSupplyInCToken,
                 props.cTokenData.decimals, exchangeRate);
-            setMaxWithdraw(supplyUnderlyingToken);
 
             const accountLiquidity = await comptroller.getAccountLiquidity(account);
             const liquidity = accountLiquidity[1].div(Mantissa).toNumber();
@@ -45,7 +42,6 @@ const WithdrawModal = (props: WithdrawModalParam) => {
                 alert('Your liquidity is not enough!');
                 props.onClose();
             }
-
         })();
     }, [comptroller, account]);
 
@@ -58,6 +54,7 @@ const WithdrawModal = (props: WithdrawModalParam) => {
             alert('Please input value!');
             return;
         }
+
         const withdrawAmount = BigNumber.from(value * 100).mul(
             BigNumber.from(10).pow(props.cTokenData.decimals)).div(100);
         if (value > maxWithdraw) {
@@ -88,7 +85,6 @@ const WithdrawModal = (props: WithdrawModalParam) => {
             setProcessing(false);
             props.onClose(result);
         } catch (e) {
-            console.log('error', e);
             alert("Operation failed.");
             setCurrentWork("Withdraw");
             setProcessing(false);
