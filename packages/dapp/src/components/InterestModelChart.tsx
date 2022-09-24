@@ -10,6 +10,7 @@ import {Text} from '@visx/text';
 import {defaultStyles, TooltipWithBounds, withTooltip} from '@visx/tooltip';
 import {WithTooltipProvidedProps} from "@visx/tooltip/lib/enhancers/withTooltip";
 import {localPoint} from "@visx/event";
+import {BORROW_COLOR, SUPPLY_COLOR} from "../constants/Colors";
 
 const background = '#3b6978';
 const accentColorDark = '#75daad';
@@ -92,7 +93,7 @@ const InterestModelChart = withTooltip<InterestModelChartParam, Rate>(({
             <svg width={width} height={height}>
                 <Group left={margin.left} top={margin.top}>
                     <LinePath
-                        stroke={'green'}
+                        stroke={SUPPLY_COLOR}
                         strokeWidth={3}
                         data={rates}
                         x={(d: Rate) => xScale(d.utilization) ?? 0}
@@ -100,7 +101,7 @@ const InterestModelChart = withTooltip<InterestModelChartParam, Rate>(({
                         curve={curveMonotoneX}
                     />
                     <LinePath
-                        stroke={'purple'}
+                        stroke={BORROW_COLOR}
                         strokeWidth={3}
                         data={rates}
                         x={(d: Rate) => xScale(d.utilization) ?? 0}

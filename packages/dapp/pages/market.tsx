@@ -21,7 +21,7 @@ import TokenProperty from "../src/components/TokenProperty";
 import Link from "next/link";
 import {ParentSize} from "@visx/responsive";
 import InterestModelChart from "../src/components/InterestModelChart";
-import {SearchOutlined} from "@ant-design/icons";
+import {SearchOutlined, StockOutlined} from "@ant-design/icons";
 import {getExplorerLinkWithChainIdAndAddress} from "../src/utils/NetworkUtil";
 import {
     CErc20,
@@ -29,6 +29,7 @@ import {
     CErc20Immutable
 } from "@dany-armstrong/hardhat-compound/dist/typechain";
 import {Mantissa} from "../src/constants/Prices";
+import {BORROW_COLOR, SUPPLY_COLOR} from "../src/constants/Colors";
 
 interface CTokenInfo {
     name: string;
@@ -186,15 +187,21 @@ export default function Market() {
     const interestModelChart = () => {
         return <Card title="Interest Rate Model">
             {rates != null ?
-                <div style={{width: '100%', height: 300}}>
-                    <ParentSize>
-                        {(parent) => (
-                            <InterestModelChart width={parent.width} height={parent.height}
-                                                rates={rates}
-                                                currentUtilizationRate={currentUtilizationRate}/>
-                        )}
-                    </ParentSize>
-                </div> :
+                <>
+                    <span><StockOutlined style={{color: "white", marginRight: 6}}/>Utilization Rate</span>
+                    <span style={{marginLeft: 20, marginRight: 20}}><StockOutlined
+                        style={{color: SUPPLY_COLOR, marginRight: 6}}/>Supply APY</span>
+                    <span style={{}}><StockOutlined style={{color: BORROW_COLOR, marginRight: 6}}/>Borrow APY</span>
+                    <div style={{width: '100%', height: 300, marginTop: 10}}>
+                        <ParentSize>
+                            {(parent) => (
+                                <InterestModelChart width={parent.width} height={parent.height}
+                                                    rates={rates}
+                                                    currentUtilizationRate={currentUtilizationRate}/>
+                            )}
+                        </ParentSize>
+                    </div>
+                </> :
                 <div>
                     <Progress
                         percent={rateCalculationProgress} style={{marginBottom: 20}}/>
@@ -254,7 +261,8 @@ export default function Market() {
                                 <Breadcrumb.Item><Link href="/">Dashboard</Link></Breadcrumb.Item>
                             }
                             {parent === 'markets' &&
-                                <Breadcrumb.Item><Link href="/markets">Markets</Link></Breadcrumb.Item>
+                                <Breadcrumb.Item><Link
+                                    href="/markets">Markets</Link></Breadcrumb.Item>
                             }
                           <Breadcrumb.Item>{cTokenInfo.symbol}</Breadcrumb.Item>
                         </Breadcrumb>
