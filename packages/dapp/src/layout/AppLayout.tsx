@@ -16,7 +16,7 @@ const AppLayout = ({children}: { children: ReactNode }) => {
         <Row>
             <Col span={24}>
                 <Layout style={{minHeight: "100vh"}}>
-                    <Header>
+                    <Header style={{position: "fixed", zIndex: 1, width: "100%"}}>
                         <Row align="stretch" gutter={20}>
                             <Col>
                                 <img src={logo.src} width={40} height={40} alt="logo"/>
@@ -34,13 +34,14 @@ const AppLayout = ({children}: { children: ReactNode }) => {
                             </Col>
                             <Col>
                                 <div>
-                                    <a href={GITHUB_PROJECT} target="_blank" rel="noopener noreferrer"><GithubOutlined
+                                    <a href={GITHUB_PROJECT} target="_blank"
+                                       rel="noopener noreferrer"><GithubOutlined
                                         style={{fontSize: 20}}/></a>
                                 </div>
                             </Col>
                         </Row>
                     </Header>
-                    <Content>
+                    <Content style={{marginTop: 60}}>
                         {active && chainId == ActiveNetwork ? children :
                             <WrongNetwork/>
                         }
@@ -53,8 +54,10 @@ const AppLayout = ({children}: { children: ReactNode }) => {
                         }}
                     >
                         © 2022 All rights reserved by Daniel Armstrong.
-                        <a href={GMAIL} rel="noopener noreferrer"><GoogleOutlined style={{fontSize: 16, marginLeft: 20}}/></a>
-                        <a href={LINKEDIN} target="_blank" rel="noopener noreferrer"><LinkedinOutlined
+                        <a href={GMAIL} rel="noopener noreferrer"><GoogleOutlined
+                            style={{fontSize: 16, marginLeft: 20}}/></a>
+                        <a href={LINKEDIN} target="_blank"
+                           rel="noopener noreferrer"><LinkedinOutlined
                             style={{fontSize: 16, marginLeft: 10}}/></a>
                         <a href={GITHUB} target="_blank" rel="noopener noreferrer"><GithubOutlined
                             style={{fontSize: 16, marginLeft: 10}}/></a>
