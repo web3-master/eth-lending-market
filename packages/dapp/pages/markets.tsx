@@ -176,7 +176,7 @@ export default function Markets() {
                                onRow={(record: DataType, rowIndex: number) => {
                                    return {
                                        onClick: event => {
-                                           router.push(`/market?cToken=${record.key.address}`)
+                                           router.push(`/market?cToken=${record.key.address}&parent=markets`)
                                        }
                                    };
                                }}

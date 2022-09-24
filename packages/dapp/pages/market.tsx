@@ -71,6 +71,7 @@ export default function Market() {
     const [rateCalculationProgress, setRateCalculationProgress] = useState(0);
     const [currentUtilizationRate, setCurrentUtilizationRate] = useState(0);
     const cTokenAddress = router.query.cToken;
+    const parent = router.query.parent;
 
     useEffect(() => {
         if (cTokens != null) {
@@ -249,7 +250,12 @@ export default function Market() {
                 <Col style={{width: '1200px'}}>
                     {cTokenInfo != null &&
                         <Breadcrumb>
-                          <Breadcrumb.Item><Link href="/markets">Markets</Link></Breadcrumb.Item>
+                            {parent === 'index' &&
+                                <Breadcrumb.Item><Link href="/">Dashboard</Link></Breadcrumb.Item>
+                            }
+                            {parent === 'markets' &&
+                                <Breadcrumb.Item><Link href="/markets">Markets</Link></Breadcrumb.Item>
+                            }
                           <Breadcrumb.Item>{cTokenInfo.symbol}</Breadcrumb.Item>
                         </Breadcrumb>
                     }

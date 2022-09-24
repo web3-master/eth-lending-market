@@ -352,7 +352,7 @@ export default function Dashboard() {
                       onRow={(record: DataType, rowIndex: number) => {
                           return {
                               onClick: event => {
-                                  router.push(`/market?cToken=${record.key.address}`)
+                                  router.push(`/market?cToken=${record.key.address}&parent=index`)
                               }
                           };
                       }}
@@ -367,7 +367,7 @@ export default function Dashboard() {
                       onRow={(record: DataType, rowIndex: number) => {
                           return {
                               onClick: event => {
-                                  router.push(`/market?cToken=${record.key.address}`)
+                                  router.push(`/market?cToken=${record.key.address}&parent=index`)
                               }
                           };
                       }}
@@ -421,7 +421,7 @@ export default function Dashboard() {
                                    onRow={(record: DataType, rowIndex: number) => {
                                        return {
                                            onClick: event => {
-                                               router.push(`/market?cToken=${record.key.address}`)
+                                               router.push(`/market?cToken=${record.key.address}&parent=index`)
                                            }
                                        };
                                    }}
