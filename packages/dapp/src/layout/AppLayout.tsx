@@ -53,7 +53,7 @@ const AppLayout = ({children}: { children: ReactNode }) => {
                             textAlign: 'center'
                         }}
                     >
-                        © 2022 All rights reserved by Daniel Armstrong.
+                        © 2022 All rights reserved by Web3-Master.
                         <a href={GMAIL} rel="noopener noreferrer"><GoogleOutlined
                             style={{fontSize: 16, marginLeft: 20}}/></a>
                         <a href={LINKEDIN} target="_blank"

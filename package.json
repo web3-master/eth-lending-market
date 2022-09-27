@@ -11,18 +11,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dany-armstrong/eth-lending-market.git"
+    "url": "git+https://github.com/web3-master/eth-lending-market.git"
   },
   "keywords": [
     "defi",
     "lending"
   ],
-  "author": "daniel armstrong",
+  "author": "sasaki kenski",
   "license": "BSL-1.0",
   "bugs": {
-    "url": "https://github.com/dany-armstrong/eth-lending-market/issues"
+    "url": "https://github.com/web3-master/eth-lending-market/issues"
   },
-  "homepage": "https://github.com/dany-armstrong/eth-lending-market#readme",
+  "homepage": "https://github.com/web3-master/eth-lending-market#readme",
   "workspaces": [
     "./packages/*"
   ]

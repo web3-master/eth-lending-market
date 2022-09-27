@@ -1,6 +1,6 @@
-![🏆](https://github.com/dany-armstrong/eth-lending-market/blob/master/dashboard.jpg?raw=true)
-![🏆](https://github.com/dany-armstrong/eth-lending-market/blob/master/markets.jpg?raw=true)
-![🏆](https://github.com/dany-armstrong/eth-lending-market/blob/master/dai-detail.jpg?raw=true)
+![🏆](https://github.com/web3-master/eth-lending-market/blob/master/dashboard.jpg?raw=true)
+![🏆](https://github.com/web3-master/eth-lending-market/blob/master/markets.jpg?raw=true)
+![🏆](https://github.com/web3-master/eth-lending-market/blob/master/dai-detail.jpg?raw=true)
 
 # 🏆🏆🏆 Eth Lending Market 🏆🏆🏆
 
